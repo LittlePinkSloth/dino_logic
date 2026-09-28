@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dino Logic</title>
+
+    <!-- version jouable navigateur -->
+
+    <link
+    rel="manifest"
+    href="manifest.json"
+    >
+
+
+    <!-- CSS -->
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <main class="app">
+
+        <h1>
+            🦖 Dino Logic
+        </h1>
+
+
+        <p class="subtitle">
+            Trouve l'emplacement de tous les dinos.
+        </p>
+
+
+        <!-- Message d'état -->
+
+        <div
+            id="status"
+            class="status"
+            aria-live="polite"
+        >
+            Chargement...
+        </div>
+
+
+        <!-- Grille -->
+
+        <div
+            id="board"
+            class="board"
+            aria-label="Grille de jeu"
+        ></div>
+
+
+        <!-- Boutons -->
+
+        <div class="buttons">
+
+            <button
+                id="undo"
+                class="action"
+                type="button"
+            >
+                ↶ Annuler
+            </button>
+
+
+            <button
+                id="clear"
+                class="action"
+                type="button"
+            >
+                Effacer
+            </button>
+
+
+            <button
+                id="newGame"
+                class="action primary"
+                type="button"
+            >
+                Nouvelle grille
+            </button>
+
+        </div>
+
+
+        <!-- Règles -->
+
+        <div class="rules">
+
+            <strong>
+                Règles
+            </strong>
+
+
+            <ul>
+
+                <li>
+                    🦖 Un dino par zone de couleur.
+                </li>
+
+                <li>
+                    🦖 Un dino par ligne.
+                </li>
+
+                <li>
+                    🦖 Un dino par colonne.
+                </li>
+
+                <li>
+                    🦖 Deux dinos ne peuvent pas se toucher,
+                    même en diagonale.
+                </li>
+
+            </ul>
+
+        </div>
+
+    </main>
+
+    <script>
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./service-worker.js")
+                .then(registration => {
+                    console.log(
+                        "Service Worker enregistré :",
+                        registration.scope
+                    );
+                })
+                .catch(error => {
+                    console.error(
+                        "Erreur Service Worker :",
+                        error
+                    );
+                });
+        });
+    }
+    </script>
+
+
+    <!--
+        IMPORTANT :
+
+        type="module" permet à main.js d'utiliser
+        import/export avec les autres fichiers.
+    -->
+
+    <script
+        type="module"
+        src="js/main.js"
+    ></script>
+
+
+</body>
+
+</html>
+
