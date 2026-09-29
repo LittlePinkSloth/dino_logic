@@ -1,4 +1,5 @@
 import { countSolutions } from "./solver.js";
+import { getDifficulty } from "./difficulty.js";
 
 /*
 
@@ -13,6 +14,7 @@ import { countSolutions } from "./solver.js";
   */
 
 const DEFAULT_SIZE = 6;
+
 
 /*
 
@@ -769,7 +771,10 @@ return {
     metadata: {
 
         solverNodes:
-            result.nodes
+            result.nodes,
+
+        difficulty:
+            getDifficulty(result.nodes)
     }
 };
 

@@ -19,6 +19,8 @@ let lives = 3;
 
 let history = [];
 
+let timeExpired = false;
+
 /*
 
 * ============================================================
@@ -71,6 +73,8 @@ lives =
 
 
 history = [];
+
+timeExpired = false;
 
 
 }
@@ -189,6 +193,196 @@ if (placed[index]) {
 
 marked[index] =
     !marked[index];
+
+
+}
+
+
+function getBonusDinoCandidates() {
+
+
+if (
+    !currentPuzzle ||
+    isGameOver()
+) {
+
+    return [];
+}
+
+
+const candidates = [];
+const size = currentPuzzle.size;
+
+
+for (
+    let row = 0;
+    row < size;
+    row++
+) {
+
+    const rowStart = row * size;
+    const rowHasDino = placed
+        .slice(rowStart, rowStart + size)
+        .some(Boolean);
+
+
+    if (rowHasDino) {
+
+        continue;
+    }
+
+
+    const index =
+        rowStart + currentPuzzle.solution[row];
+
+
+    placed[index] = true;
+
+    const canPlace =
+        isValidCell(index);
+
+    placed[index] = false;
+
+
+    if (canPlace) {
+
+        candidates.push(index);
+    }
+}
+
+
+return candidates;
+
+
+}
+
+
+export function useBonusLife() {
+
+
+if (
+    !currentPuzzle ||
+    lives >= INITIAL_LIVES
+) {
+
+    return false;
+}
+
+
+saveHistory();
+
+lives++;
+
+
+return true;
+
+
+}
+
+
+export function useBonusDino() {
+
+
+const candidates =
+    getBonusDinoCandidates();
+
+
+if (candidates.length === 0) {
+
+    return false;
+}
+
+
+const index = candidates[
+    Math.floor(
+        Math.random() * candidates.length
+    )
+];
+
+
+toggleCell(index);
+
+
+return true;
+
+
+}
+
+
+export function useBonusMarks() {
+
+
+if (!currentPuzzle) {
+
+    return false;
+}
+
+
+const candidates = [];
+
+for (
+    let index = 0;
+    index < marked.length;
+    index++
+) {
+
+    if (
+        !marked[index] &&
+        !placed[index]
+    ) {
+
+        candidates.push(index);
+    }
+}
+
+
+if (candidates.length === 0) {
+
+    return false;
+}
+
+
+const count =
+    Math.min(3, candidates.length);
+
+
+for (
+    let index = 0;
+    index < count;
+    index++
+) {
+
+    const randomIndex =
+        index + Math.floor(
+            Math.random() *
+            (candidates.length - index)
+        );
+
+
+    [
+        candidates[index],
+        candidates[randomIndex]
+    ] = [
+        candidates[randomIndex],
+        candidates[index]
+    ];
+}
+
+
+saveHistory();
+
+
+for (
+    let index = 0;
+    index < count;
+    index++
+) {
+
+    marked[candidates[index]] = true;
+}
+
+
+return true;
 
 
 }
@@ -478,6 +672,8 @@ lives =
 
 
 history = [];
+
+timeExpired = false;
 
 
 }
@@ -810,7 +1006,25 @@ return true;
 export function isGameOver() {
 
 
-return lives <= 0;
+return lives <= 0 || timeExpired;
+
+
+}
+
+
+export function expireGameByTime() {
+
+
+if (!currentPuzzle || isGameOver() || isSolved()) {
+
+    return false;
+}
+
+
+timeExpired = true;
+
+
+return true;
 
 
 }
@@ -857,8 +1071,25 @@ return {
     gameOver:
         isGameOver(),
 
+    timeExpired:
+        timeExpired,
+
     canUndo:
-        history.length > 0
+        history.length > 0,
+
+    bonusAvailability: {
+        life:
+            lives < INITIAL_LIVES,
+
+        dino:
+            getBonusDinoCandidates().length > 0,
+
+        marks:
+            marked.some(
+                (isMarked, index) =>
+                    !isMarked && !placed[index]
+            )
+    }
 };
 
 

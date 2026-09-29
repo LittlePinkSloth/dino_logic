@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "dino-logic-v1";
+const CACHE_NAME = "dino-logic-v2";
 
 
 const FILES_TO_CACHE = [
@@ -15,6 +15,7 @@ const FILES_TO_CACHE = [
     "./js/main.js",
     "./js/game.js",
     "./js/generator.js",
+    "./js/difficulty.js",
     "./js/solver.js",
     "./js/ui.js",
 

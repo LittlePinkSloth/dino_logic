@@ -33,9 +33,72 @@
   .status {
     min-height: 28px;
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 3px;
     font-weight: 600;
     color: #687083;
+  }
+
+  .puzzle-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 20px;
+    margin-bottom: 12px;
+    color: #687083;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .timer {
+    color: #252a38;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer.urgent {
+    color: #d64545;
+    font-weight: 800;
+  }
+
+  .heroic-tools {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-bottom: 12px;
+  }
+
+  .heroic-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .heroic-toggle input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: #c5424a;
+  }
+
+  .heroic-toggle input:disabled {
+    cursor: not-allowed;
+  }
+
+  .heroic-streak {
+    padding: 6px 10px;
+    border: 1px solid #d4d7df;
+    border-radius: 8px;
+    background: white;
+    color: #252a38;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
 
   .status.success {
@@ -53,6 +116,8 @@
     
     
     display: grid;
+    touch-action: none;
+    user-select: none;
     
     gap: 3px;
     padding: 4px;
@@ -161,6 +226,83 @@
     margin-top: 18px;
   }
 
+  .new-game-controls,
+  .settings {
+    display: flex;
+    align-items: center;
+  }
+
+  .new-game-controls {
+    gap: 8px;
+  }
+
+  .settings {
+    gap: 6px;
+  }
+
+  .settings label {
+    color: #656c7d;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .settings select {
+    min-height: 44px;
+    padding: 8px;
+    border: 1px solid #d4d7df;
+    border-radius: 8px;
+    background: white;
+    color: #252a38;
+    font: inherit;
+  }
+
+  .bonus-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin: 12px auto 0;
+    width: min(90vw, 500px);
+  }
+
+  button.bonus {
+    min-width: 0;
+    min-height: 60px;
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border: 1px solid #d4d7df;
+    border-radius: 8px;
+    background: white;
+    color: #252a38;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  button.bonus:hover:not(:disabled) {
+    background: #f7f7f9;
+  }
+
+  button.bonus:focus-visible {
+    outline: 3px solid #5b61e8;
+    outline-offset: 2px;
+  }
+
+  button.bonus:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .bonus-icon {
+    min-height: 24px;
+    font-size: 20px;
+    line-height: 1;
+  }
+
   button.action {
     min-height: 44px;
     padding: 10px 18px;
@@ -223,12 +365,80 @@
     margin: 4px 0;
   }
 
+  body.heroic-mode {
+    background: #171a1f;
+    color: #e7e9ed;
+  }
+
+  body.heroic-mode .subtitle,
+  body.heroic-mode .status,
+  body.heroic-mode .puzzle-meta {
+    color: #b1b8c2;
+  }
+
+  body.heroic-mode .status.success {
+    color: #8ed8a2;
+  }
+
+  body.heroic-mode .status.error {
+    color: #ff858a;
+  }
+
+  body.heroic-mode .timer {
+    color: #ff777e;
+  }
+
+  body.heroic-mode .timer.urgent {
+    color: #ff3f4c;
+  }
+
+  body.heroic-mode .heroic-streak,
+  body.heroic-mode button.action,
+  body.heroic-mode button.bonus,
+  body.heroic-mode .settings select {
+    border-color: #454c56;
+    background: #272c34;
+    color: #e7e9ed;
+  }
+
+  body.heroic-mode button.primary {
+    border-color: #c5424a;
+    background: #c5424a;
+    color: white;
+  }
+
+  body.heroic-mode button.primary:hover {
+    background: #aa343c;
+  }
+
+  body.heroic-mode .settings label {
+    color: #b1b8c2;
+  }
+
+  body.heroic-mode .board {
+    background: #303640;
+  }
+
+  body.heroic-mode .rules {
+    border-color: #454c56;
+    background: #22272e;
+    color: #b1b8c2;
+  }
+
+  body.heroic-mode .rules strong {
+    color: #e7e9ed;
+  }
+
   @media (max-width: 400px) {
     .app {
       padding: 16px 8px;
     }
 
     .board {
+      width: 94vw;
+    }
+
+    .bonus-actions {
       width: 94vw;
     }
   }

@@ -54,45 +54,28 @@
         Chargement...
     </div>
 
+    <div class="puzzle-meta">
+        <span id="difficulty" class="difficulty"></span>
+        <span class="meta-divider" aria-hidden="true">·</span>
+        <span
+            id="timer"
+            class="timer"
+            role="timer"
+            aria-label="Temps écoulé"
+        >00:00</span>
+    </div>
 
-    <!-- Choix de la taille -->
-
-    <div class="settings">
-
-        <label for="gridSize">
-            Taille de la grille
+    <div class="heroic-tools">
+        <label class="heroic-toggle" for="heroicMode">
+            <input id="heroicMode" type="checkbox">
+            <span>Mode héroïque</span>
         </label>
-
-
-        <select
-            id="gridSize"
-        >
-
-            <option value="4">
-                4 × 4
-            </option>
-
-            <option value="5">
-                5 × 5
-            </option>
-
-            <option
-                value="6"
-                selected
-            >
-                6 × 6
-            </option>
-
-            <option value="7">
-                7 × 7
-            </option>
-
-            <option value="8">
-                8 × 8
-            </option>
-
-        </select>
-
+        <output
+            id="heroicStreak"
+            class="heroic-streak"
+            aria-live="polite"
+            hidden
+        >Série : 0</output>
     </div>
 
 
@@ -103,6 +86,46 @@
         class="board"
         aria-label="Grille de jeu"
     ></div>
+
+
+    <!-- Bonus -->
+
+    <div class="bonus-actions" aria-label="Bonus">
+
+        <button
+            id="bonusLife"
+            class="bonus"
+            type="button"
+            aria-label="Ajouter une vie"
+            title="Ajouter une vie"
+        >
+            <span class="bonus-icon" aria-hidden="true">❤️</span>
+            <span>+1 vie</span>
+        </button>
+
+        <button
+            id="bonusDino"
+            class="bonus"
+            type="button"
+            aria-label="Placer un dino"
+            title="Placer un dino"
+        >
+            <span class="bonus-icon" aria-hidden="true">🦖</span>
+            <span>Dino</span>
+        </button>
+
+        <button
+            id="bonusMarks"
+            class="bonus"
+            type="button"
+            aria-label="Marquer jusqu'à trois cases"
+            title="Marquer jusqu'à trois cases"
+        >
+            <span class="bonus-icon" aria-hidden="true">✕</span>
+            <span>3 croix</span>
+        </button>
+
+    </div>
 
 
     <!-- Boutons -->
@@ -127,13 +150,33 @@
         </button>
 
 
-        <button
-            id="newGame"
-            class="action primary"
-            type="button"
-        >
-            Nouvelle grille
-        </button>
+        <div class="new-game-controls">
+
+            <div class="settings">
+
+                <label for="gridSize">
+                    Taille
+                </label>
+
+                <select id="gridSize">
+                    <option value="4">4 × 4</option>
+                    <option value="5">5 × 5</option>
+                    <option value="6" selected>6 × 6</option>
+                    <option value="7">7 × 7</option>
+                    <option value="8">8 × 8</option>
+                </select>
+
+            </div>
+
+            <button
+                id="newGame"
+                class="action primary"
+                type="button"
+            >
+                Nouvelle grille
+            </button>
+
+        </div>
 
     </div>
 
