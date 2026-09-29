@@ -1,12 +1,11 @@
-
 import { generatePuzzle } from "./generator.js";
 
-
 /*
- * ============================================================
- * ÉTAT DU JEU
- * ============================================================
- */
+
+* ============================================================
+* ÉTAT DU JEU
+* ============================================================
+  */
 
 let currentPuzzle = null;
 
@@ -14,370 +13,514 @@ let placed = [];
 
 let marked = [];
 
+let incorrect = [];
+
+let lives = 3;
+
 let history = [];
 
+/*
+
+* ============================================================
+* CONSTANTES
+* ============================================================
+  */
+
+const INITIAL_LIVES = 3;
+
+const DEFAULT_SIZE = 6;
 
 /*
- * ============================================================
- * INITIALISER UNE PARTIE
- * ============================================================
- */
 
-export async function initializeGame() {
+* ============================================================
+* INITIALISER UNE PARTIE
+* ============================================================
+  */
 
-    currentPuzzle =
-        await generatePuzzle();
-
-
-    const cellCount =
-        currentPuzzle.size *
-        currentPuzzle.size;
+export async function initializeGame(
+size = DEFAULT_SIZE
+) {
 
 
-    placed =
-        new Array(cellCount)
-            .fill(false);
+currentPuzzle =
+    await generatePuzzle(size);
 
 
-    marked =
-        new Array(cellCount)
-            .fill(false);
+const cellCount =
+    currentPuzzle.size *
+    currentPuzzle.size;
 
 
-    history = [];
+placed =
+    new Array(cellCount)
+        .fill(false);
+
+
+marked =
+    new Array(cellCount)
+        .fill(false);
+
+
+incorrect =
+    new Array(cellCount)
+        .fill(false);
+
+
+lives =
+    INITIAL_LIVES;
+
+
+history = [];
+
+
 }
 
-
 /*
- * ============================================================
- * ACCÈS AU PUZZLE
- * ============================================================
- */
+
+* ============================================================
+* ACCÈS AU PUZZLE
+* ============================================================
+  */
 
 export function getCurrentPuzzle() {
 
-    return currentPuzzle;
+
+return currentPuzzle;
+
+
 }
 
-
 /*
- * ============================================================
- * ÉTAT DES CASES
- * ============================================================
- */
+
+* ============================================================
+* ÉTAT DES CASES
+* ============================================================
+  */
 
 export function getPlaced() {
 
-    return [...placed];
+
+return [...placed];
+
+
 }
 
 /*
- * ============================================================
- * ACCÈS AUX CASES MARQUÉES
- * ============================================================
- */
+
+* ============================================================
+* ACCÈS AUX CASES MARQUÉES
+* ============================================================
+  */
 
 export function getMarked() {
 
-    return [...marked];
+
+return [...marked];
+
+
 }
 
+/*
+
+* ============================================================
+* ACCÈS AUX CASES INCORRECTES
+* ============================================================
+  */
+
+export function getIncorrect() {
+
+
+return [...incorrect];
+
+
+}
 
 /*
- * ============================================================
- * MARQUER / DÉMARQUER UNE CASE
- * ============================================================
- *
- * Les marques sont purement visuelles.
- *
- * Elles ne sont jamais prises en compte par le solveur
- * ou les règles du jeu.
- * ============================================================
- */
+
+* ============================================================
+* ACCÈS AUX VIES
+* ============================================================
+  */
+
+export function getLives() {
+
+
+return lives;
+
+
+}
+
+/*
+
+* ============================================================
+* MARQUER / DÉMARQUER UNE CASE
+* ============================================================
+*
+* Les marques sont purement visuelles.
+*
+* Elles ne sont jamais prises en compte par le solveur
+* ou les règles du jeu.
+* ============================================================
+  */
 
 export function toggleMark(index) {
 
-    if (
-        !currentPuzzle ||
-        index < 0 ||
-        index >= marked.length
-    ) {
-        return;
-    }
+
+if (
+    !currentPuzzle ||
+    index < 0 ||
+    index >= marked.length
+) {
+
+    return;
+}
 
 
-    /*
-     * Une case contenant un chat ne peut pas
-     * avoir une croix.
-     */
+/*
+ * Une case contenant un dino ne peut pas
+ * avoir une croix.
+ */
 
-    if (placed[index]) {
-        return;
-    }
+if (placed[index]) {
+
+    return;
+}
 
 
-    marked[index] =
-        !marked[index];
+marked[index] =
+    !marked[index];
+
+
 }
 
 /*
- * ============================================================
- * CHANGER UNE CASE
- * ============================================================
- */
+
+* ============================================================
+* VÉRIFIER SI UN DINO EST CORRECT
+* ============================================================
+*
+* La solution est stockée sous la forme :
+*
+* solution[row] = column
+* ============================================================
+  */
+
+function isCorrectPlacement(index) {
+
+
+const size =
+    currentPuzzle.size;
+
+
+const row =
+    Math.floor(index / size);
+
+const column =
+    index % size;
+
+
+return (
+    currentPuzzle.solution[row] ===
+    column
+);
+
+
+}
+
+/*
+
+* ============================================================
+* SAUVEGARDER L'ÉTAT
+* ============================================================
+  */
+
+function saveHistory() {
+
+
+history.push({
+
+    placed:
+        [...placed],
+
+    marked:
+        [...marked],
+
+    incorrect:
+        [...incorrect],
+
+    lives:
+        lives
+});
+
+
+}
+
+/*
+
+* ============================================================
+* CHANGER UNE CASE
+* ============================================================
+  */
 
 export function toggleCell(index) {
 
-    if (
-        !currentPuzzle
-    ) {
-        return;
-    }
 
+if (
+    !currentPuzzle
+) {
 
-    if (
-        index < 0 ||
-        index >= placed.length
-    ) {
-        return;
-    }
-
-
-    /*
-     * Sauvegarde de l'état complet.
-     */
-
-    history.push({
-        placed: [...placed],
-        marked: [...marked]
-    });
-
-
-    /*
-     * Un chat remplace automatiquement une croix.
-     */
-
-    marked[index] = false;
-
-
-    /*
-     * Place ou retire le chat.
-     */
-
-    placed[index] =
-        !placed[index];
+    return;
 }
 
 
 /*
- * ============================================================
- * EFFACER
- * ============================================================
+ * Une partie terminée ne permet plus
+ * de placer ou retirer de dinos.
  */
+
+if (
+    isGameOver()
+) {
+
+    return;
+}
+
+
+if (
+    index < 0 ||
+    index >= placed.length
+) {
+
+    return;
+}
+
+
+/*
+ * Si le joueur retire un dino,
+ * il n'y a pas de nouvelle erreur à évaluer.
+ */
+
+if (placed[index]) {
+
+    saveHistory();
+
+
+    placed[index] = false;
+
+    incorrect[index] = false;
+
+
+    return;
+}
+
+
+/*
+ * Sauvegarde de l'état complet
+ * avant le nouveau placement.
+ */
+
+saveHistory();
+
+
+/*
+ * Un dino remplace automatiquement
+ * une croix.
+ */
+
+marked[index] = false;
+
+
+/*
+ * Place le dino.
+ */
+
+placed[index] = true;
+
+
+/*
+ * Vérifier immédiatement si le dino
+ * correspond à la solution.
+ */
+
+if (
+    !isCorrectPlacement(index)
+) {
+
+    incorrect[index] = true;
+
+    lives--;
+}
+
+
+}
+
+/*
+
+* ============================================================
+* EFFACER
+* ============================================================
+  */
+
 export function clearBoard() {
 
-    history.push({
-        placed: [...placed],
-        marked: [...marked]
-    });
+
+saveHistory();
 
 
-    placed =
-        new Array(
-            currentPuzzle.size *
-            currentPuzzle.size
-        ).fill(false);
+const cellCount =
+    currentPuzzle.size *
+    currentPuzzle.size;
 
 
-    marked =
-        new Array(
-            currentPuzzle.size *
-            currentPuzzle.size
-        ).fill(false);
-}
+placed =
+    new Array(cellCount)
+        .fill(false);
+
+
+marked =
+    new Array(cellCount)
+        .fill(false);
+
+
+incorrect =
+    new Array(cellCount)
+        .fill(false);
 
 
 /*
- * ============================================================
- * ANNULER
- * ============================================================
+ * Effacer le plateau ne rend pas les vies perdues.
  */
+
+
+}
+
+/*
+
+* ============================================================
+* ANNULER
+* ============================================================
+  */
 
 export function undo() {
 
-    if (
-        history.length === 0
-    ) {
-        return false;
-    }
 
+if (
+    history.length === 0
+) {
 
-    const previous =
-        history.pop();
-
-
-    placed =
-        previous.placed;
-
-
-    marked =
-        previous.marked;
-
-
-    return true;
+    return false;
 }
 
 
-/*
- * ============================================================
- * NOUVELLE PARTIE
- * ============================================================
- */
-
-export async function newPuzzle() {
-
-    currentPuzzle =
-        await generatePuzzle();
+const previous =
+    history.pop();
 
 
-    const cellCount =
-        currentPuzzle.size *
-        currentPuzzle.size;
+placed =
+    previous.placed;
 
 
-    placed =
-        new Array(cellCount)
-            .fill(false);
+marked =
+    previous.marked;
 
 
-    marked =
-        new Array(cellCount)
-            .fill(false);
+incorrect =
+    previous.incorrect;
 
 
-    history = [];
+lives =
+    previous.lives;
+
+
+return true;
+
+
 }
 
+/*
+
+* ============================================================
+* NOUVELLE PARTIE
+* ============================================================
+  */
+
+export async function newPuzzle(
+size = DEFAULT_SIZE
+) {
+
+
+currentPuzzle =
+    await generatePuzzle(size);
+
+
+const cellCount =
+    currentPuzzle.size *
+    currentPuzzle.size;
+
+
+placed =
+    new Array(cellCount)
+        .fill(false);
+
+
+marked =
+    new Array(cellCount)
+        .fill(false);
+
+
+incorrect =
+    new Array(cellCount)
+        .fill(false);
+
+
+lives =
+    INITIAL_LIVES;
+
+
+history = [];
+
+
+}
 
 /*
- * ============================================================
- * VOISINS
- * ============================================================
- */
+
+* ============================================================
+* VOISINS
+* ============================================================
+  */
 
 function getNeighbors(index) {
 
-    const size =
-        currentPuzzle.size;
+
+const size =
+    currentPuzzle.size;
 
 
-    const row =
-        Math.floor(index / size);
+const row =
+    Math.floor(index / size);
 
-    const column =
-        index % size;
-
-
-    const neighbors = [];
+const column =
+    index % size;
 
 
-    for (
-        let dr = -1;
-        dr <= 1;
-        dr++
-    ) {
-
-        for (
-            let dc = -1;
-            dc <= 1;
-            dc++
-        ) {
-
-            if (
-                dr === 0 &&
-                dc === 0
-            ) {
-
-                continue;
-            }
+const neighbors = [];
 
 
-            const r =
-                row + dr;
-
-            const c =
-                column + dc;
-
-
-            if (
-                r >= 0 &&
-                r < size &&
-                c >= 0 &&
-                c < size
-            ) {
-
-                neighbors.push(
-                    r * size + c
-                );
-            }
-        }
-    }
-
-
-    return neighbors;
-}
-
-
-/*
- * ============================================================
- * VÉRIFIER UNE CASE
- * ============================================================
- */
-
-export function isValidCell(index) {
-
-    if (
-        !placed[index]
-    ) {
-
-        return true;
-    }
-
-
-    const size =
-        currentPuzzle.size;
-
-
-    const zones =
-        currentPuzzle.zones;
-
-
-    const row =
-        Math.floor(index / size);
-
-    const column =
-        index % size;
-
-
-    let rowCount = 0;
-
-    let columnCount = 0;
-
-    let zoneCount = 0;
-
-
-    /*
-     * Ligne / colonne / zone.
-     */
+for (
+    let dr = -1;
+    dr <= 1;
+    dr++
+) {
 
     for (
-        let i = 0;
-        i < placed.length;
-        i++
+        let dc = -1;
+        dc <= 1;
+        dc++
     ) {
 
         if (
-            !placed[i]
+            dr === 0 &&
+            dc === 0
         ) {
 
             continue;
@@ -385,198 +528,338 @@ export function isValidCell(index) {
 
 
         const r =
-            Math.floor(i / size);
+            row + dr;
 
         const c =
-            i % size;
+            column + dc;
 
 
         if (
-            r === row
+            r >= 0 &&
+            r < size &&
+            c >= 0 &&
+            c < size
         ) {
 
-            rowCount++;
-        }
-
-
-        if (
-            c === column
-        ) {
-
-            columnCount++;
-        }
-
-
-        if (
-            zones[i] ===
-            zones[index]
-        ) {
-
-            zoneCount++;
+            neighbors.push(
+                r * size + c
+            );
         }
     }
+}
 
 
-    if (
-        rowCount > 1 ||
-        columnCount > 1 ||
-        zoneCount > 1
-    ) {
-
-        return false;
-    }
+return neighbors;
 
 
-    /*
-     * Adjacent / diagonale.
-     */
+}
 
-    for (
-        const neighbor
-        of getNeighbors(index)
-    ) {
+/*
 
-        if (
-            placed[neighbor]
-        ) {
+* ============================================================
+* VÉRIFIER UNE CASE
+* ============================================================
+  */
 
-            return false;
-        }
-    }
+export function isValidCell(index) {
 
+
+if (
+    !placed[index]
+) {
 
     return true;
 }
 
 
+const size =
+    currentPuzzle.size;
+
+
+const zones =
+    currentPuzzle.zones;
+
+
+const row =
+    Math.floor(index / size);
+
+const column =
+    index % size;
+
+
+let rowCount = 0;
+
+let columnCount = 0;
+
+let zoneCount = 0;
+
+
 /*
- * ============================================================
- * VÉRIFIER LA GRILLE
- * ============================================================
+ * Ligne / colonne / zone.
  */
+
+for (
+    let i = 0;
+    i < placed.length;
+    i++
+) {
+
+    if (
+        !placed[i]
+    ) {
+
+        continue;
+    }
+
+
+    const r =
+        Math.floor(i / size);
+
+    const c =
+        i % size;
+
+
+    if (
+        r === row
+    ) {
+
+        rowCount++;
+    }
+
+
+    if (
+        c === column
+    ) {
+
+        columnCount++;
+    }
+
+
+    if (
+        zones[i] ===
+        zones[index]
+    ) {
+
+        zoneCount++;
+    }
+}
+
+
+if (
+    rowCount > 1 ||
+    columnCount > 1 ||
+    zoneCount > 1
+) {
+
+    return false;
+}
+
+
+/*
+ * Adjacent / diagonale.
+ */
+
+for (
+    const neighbor
+    of getNeighbors(index)
+) {
+
+    if (
+        placed[neighbor]
+    ) {
+
+        return false;
+    }
+}
+
+
+return true;
+
+
+}
+
+/*
+
+* ============================================================
+* VÉRIFIER LA GRILLE
+* ============================================================
+  */
 
 export function isValidBoard() {
 
-    for (
-        let i = 0;
-        i < placed.length;
-        i++
+
+for (
+    let i = 0;
+    i < placed.length;
+    i++
+) {
+
+    if (
+        placed[i] &&
+        !isValidCell(i)
     ) {
 
-        if (
-            placed[i] &&
-            !isValidCell(i)
-        ) {
-
-            return false;
-        }
+        return false;
     }
-
-
-    return true;
 }
 
 
+return true;
+
+
+}
+
 /*
- * ============================================================
- * NOMBRE DE DINOS
- * ============================================================
- */
+
+* ============================================================
+* NOMBRE DE DINOS
+* ============================================================
+  */
 
 export function countDinos() {
 
-    return placed.filter(
-        Boolean
-    ).length;
+
+return placed.filter(
+    Boolean
+).length;
+
+
 }
 
-
 /*
- * ============================================================
- * VICTOIRE
- * ============================================================
- *
- * Comme le générateur garantit une solution unique,
- * nous n'avons plus besoin de comparer avec une solution
- * pré-enregistrée.
- *
- * Il suffit que :
- *
- * - toutes les lignes aient un chat
- * - toutes les colonnes aient un chat
- * - toutes les zones aient un chat
- * - aucun chat ne soit adjacent
- *
- * ============================================================
- */
+
+* ============================================================
+* VICTOIRE
+* ============================================================
+*
+* Une grille est résolue lorsque :
+*
+* * toutes les lignes ont un dino
+* * toutes les colonnes ont un dino
+* * toutes les zones ont un dino
+* * aucun dino n'est adjacent
+* * tous les dinos sont corrects
+*
+* ============================================================
+  */
 
 export function isSolved() {
 
-    const size =
-        currentPuzzle.size;
+
+const size =
+    currentPuzzle.size;
 
 
-    /*
-     * Il faut exactement SIZE dinos.
-     */
+/*
+ * Il faut exactement SIZE dinos.
+ */
 
-    if (
-        countDinos() !== size
-    ) {
+if (
+    countDinos() !== size
+) {
 
-        return false;
-    }
-
-
-    /*
-     * Toutes les règles doivent être respectées.
-     */
-
-    if (
-        !isValidBoard()
-    ) {
-
-        return false;
-    }
-
-
-    return true;
+    return false;
 }
 
 
 /*
- * ============================================================
- * ÉTAT COMPLET POUR L'INTERFACE
- * ============================================================
+ * Toutes les règles doivent être respectées.
  */
+
+if (
+    !isValidBoard()
+) {
+
+    return false;
+}
+
+
+/*
+ * Tous les dinos doivent correspondre
+ * à la solution.
+ */
+
+for (
+    let i = 0;
+    i < placed.length;
+    i++
+) {
+
+    if (
+        placed[i] &&
+        !isCorrectPlacement(i)
+    ) {
+
+        return false;
+    }
+}
+
+
+return true;
+
+
+}
+
+/*
+
+* ============================================================
+* PARTIE PERDUE
+* ============================================================
+  */
+
+export function isGameOver() {
+
+
+return lives <= 0;
+
+
+}
+
+/*
+
+* ============================================================
+* ÉTAT COMPLET POUR L'INTERFACE
+* ============================================================
+  */
 
 export function getGameState() {
 
-    return {
 
-        size:
-            currentPuzzle.size,
+return {
 
-        placed:
-            [...placed],
+    size:
+        currentPuzzle.size,
 
-        marked:
-            [...marked],
+    placed:
+        [...placed],
 
-        puzzle:
-            currentPuzzle,
+    marked:
+        [...marked],
 
-        dinos:
-            countDinos(),
+    incorrect:
+        [...incorrect],
 
-        valid:
-            isValidBoard(),
+    lives:
+        lives,
 
-        solved:
-            isSolved(),
+    puzzle:
+        currentPuzzle,
 
-        canUndo:
-            history.length > 0
-    };
+    dinos:
+        countDinos(),
+
+    valid:
+        isValidBoard(),
+
+    solved:
+        isSolved(),
+
+    gameOver:
+        isGameOver(),
+
+    canUndo:
+        history.length > 0
+};
+
+
 }
-

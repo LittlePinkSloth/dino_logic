@@ -50,17 +50,19 @@
     width: min(90vw, 500px);
     aspect-ratio: 1;
     margin: auto;
-
+    
+    
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    grid-template-rows: repeat(6, 1fr);
-
+    
     gap: 3px;
     padding: 4px;
-
+    
     background: #c8ccd5;
     border-radius: 14px;
-  }
+    
+    
+    }
+    
 
   .cell {
     border: none;
@@ -135,6 +137,14 @@
 
   .zone-5 {
     background: #b8e0dc;
+  }
+
+  .zone-6 {
+    background: #e8e0dc;
+  }
+
+  .zone-7 {
+    background: #a8e0dc;
   }
 
   /*

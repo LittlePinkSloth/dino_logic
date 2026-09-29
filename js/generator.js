@@ -1,497 +1,368 @@
-
 import { countSolutions } from "./solver.js";
 
+/*
+
+* ============================================================
+* CONFIGURATION
+* ============================================================
+  */
 
 /*
- * ============================================================
- * CONFIGURATION
- * ============================================================
- */
 
-const SIZE = 6;
+* Taille utilisée si aucune taille n'est précisée.
+  */
 
-const REGION_COUNT = 6;
-
+const DEFAULT_SIZE = 6;
 
 /*
- * On limite volontairement le nombre de tentatives
- * par génération.
- *
- * Le générateur est appelé plusieurs fois si nécessaire.
- */
+
+* Nombre de tentatives effectuées
+* avant de rendre la main au navigateur.
+  */
 
 const ATTEMPTS_PER_BATCH = 20;
 
-
 /*
- * ============================================================
- * OUTILS ALÉATOIRES
- * ============================================================
- */
+
+* ============================================================
+* OUTILS ALÉATOIRES
+* ============================================================
+  */
 
 function randomInt(min, max) {
 
-    return Math.floor(
-        Math.random() * (max - min + 1)
-    ) + min;
-}
 
+return Math.floor(
+    Math.random() * (max - min + 1)
+) + min;
+
+
+}
 
 function shuffle(array) {
 
-    const result = [...array];
 
+const result = [...array];
 
-    for (
-        let i = result.length - 1;
-        i > 0;
-        i--
-    ) {
+for (
+    let i = result.length - 1;
+    i > 0;
+    i--
+) {
 
-        const j = randomInt(0, i);
+    const j =
+        randomInt(0, i);
 
-
-        [
-            result[i],
-            result[j]
-        ] = [
-            result[j],
-            result[i]
-        ];
-    }
-
-
-    return result;
+    [
+        result[i],
+        result[j]
+    ] = [
+        result[j],
+        result[i]
+    ];
 }
 
+return result;
+
+
+}
 
 /*
- * ============================================================
- * VOISINS ORTHOGONAUX
- * ============================================================
- */
 
-function getOrthogonalNeighbors(index) {
+* ============================================================
+* VOISINS ORTHOGONAUX
+* ============================================================
+  */
 
-    const row =
-        Math.floor(index / SIZE);
-
-    const column =
-        index % SIZE;
+function getOrthogonalNeighbors(index, size) {
 
 
-    const result = [];
+const row =
+    Math.floor(index / size);
 
+const column =
+    index % size;
 
-    const directions = [
-        [-1, 0],
-        [1, 0],
-        [0, -1],
-        [0, 1]
-    ];
+const result = [];
 
+const directions = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1]
+];
 
-    for (
-        const [dr, dc]
-        of directions
+for (
+    const [dr, dc]
+    of directions
+) {
+
+    const r =
+        row + dr;
+
+    const c =
+        column + dc;
+
+    if (
+        r >= 0 &&
+        r < size &&
+        c >= 0 &&
+        c < size
     ) {
 
-        const r = row + dr;
+        result.push(
+            r * size + c
+        );
+    }
+}
 
-        const c = column + dc;
+return result;
 
+
+}
+
+/*
+
+* ============================================================
+* VOISINS AVEC DIAGONALES
+* ============================================================
+  */
+
+function getNeighbors(index, size) {
+
+
+const row =
+    Math.floor(index / size);
+
+const column =
+    index % size;
+
+const result = [];
+
+for (
+    let dr = -1;
+    dr <= 1;
+    dr++
+) {
+
+    for (
+        let dc = -1;
+        dc <= 1;
+        dc++
+    ) {
+
+        if (
+            dr === 0 &&
+            dc === 0
+        ) {
+
+            continue;
+        }
+
+        const r =
+            row + dr;
+
+        const c =
+            column + dc;
 
         if (
             r >= 0 &&
-            r < SIZE &&
+            r < size &&
             c >= 0 &&
-            c < SIZE
+            c < size
         ) {
 
             result.push(
-                r * SIZE + c
+                r * size + c
             );
         }
     }
-
-
-    return result;
 }
 
+return result;
+
+
+}
 
 /*
- * ============================================================
- * VOISINS AVEC DIAGONALES
- * ============================================================
- */
 
-function getNeighbors(index) {
+* ============================================================
+* GÉNÉRATION D'UNE SOLUTION
+* ============================================================
+*
+* On construit une solution avec :
+*
+* * 1 dino par ligne
+* * 1 dino par colonne
+* * aucun contact, diagonale comprise
+* ============================================================
+  */
 
-    const row =
-        Math.floor(index / SIZE);
-
-    const column =
-        index % SIZE;
+function generateSolution(size) {
 
 
-    const result = [];
+const solution = [];
+
+const usedColumns =
+    new Set();
 
 
-    for (
-        let dr = -1;
-        dr <= 1;
-        dr++
+function search(row) {
+
+    if (
+        row === size
     ) {
 
-        for (
-            let dc = -1;
-            dc <= 1;
-            dc++
-        ) {
-
-            if (
-                dr === 0 &&
-                dc === 0
-            ) {
-                continue;
-            }
-
-
-            const r = row + dr;
-
-            const c = column + dc;
-
-
-            if (
-                r >= 0 &&
-                r < SIZE &&
-                c >= 0 &&
-                c < SIZE
-            ) {
-
-                result.push(
-                    r * SIZE + c
-                );
-            }
-        }
+        return true;
     }
 
 
-    return result;
-}
+    const columns =
+        shuffle(
+            Array.from(
+                { length: size },
+                (_, i) => i
+            )
+        );
 
 
-/*
- * ============================================================
- * GÉNÉRATION D'UNE SOLUTION
- * ============================================================
- *
- * On construit une solution avec :
- *
- * - 1 chat par ligne
- * - 1 chat par colonne
- * - aucun contact, diagonale comprise
- * ============================================================
- */
-
-function generateSolution() {
-
-    const solution = [];
-
-    const usedColumns =
-        new Set();
-
-
-    function search(row) {
+    for (
+        const column
+        of columns
+    ) {
 
         if (
-            row === SIZE
+            usedColumns.has(column)
+        ) {
+
+            continue;
+        }
+
+
+        const index =
+            row * size + column;
+
+
+        /*
+         * Vérifier les dinos déjà placés.
+         */
+
+        let conflict = false;
+
+
+        for (
+            const other
+            of solution
+        ) {
+
+            if (
+                getNeighbors(
+                    index,
+                    size
+                ).includes(other)
+            ) {
+
+                conflict = true;
+
+                break;
+            }
+        }
+
+
+        if (conflict) {
+
+            continue;
+        }
+
+
+        solution.push(index);
+
+        usedColumns.add(column);
+
+
+        if (
+            search(row + 1)
         ) {
 
             return true;
         }
 
 
-        const columns =
-            shuffle(
-                Array.from(
-                    { length: SIZE },
-                    (_, i) => i
-                )
-            );
+        solution.pop();
 
-
-        for (
-            const column
-            of columns
-        ) {
-
-            if (
-                usedColumns.has(column)
-            ) {
-
-                continue;
-            }
-
-
-            const index =
-                row * SIZE + column;
-
-
-            /*
-             * Vérifier les chats déjà placés.
-             */
-
-            let conflict = false;
-
-
-            for (
-                const other
-                of solution
-            ) {
-
-                if (
-                    getNeighbors(index)
-                        .includes(other)
-                ) {
-
-                    conflict = true;
-
-                    break;
-                }
-            }
-
-
-            if (conflict) {
-                continue;
-            }
-
-
-            solution.push(index);
-
-            usedColumns.add(column);
-
-
-            if (
-                search(row + 1)
-            ) {
-
-                return true;
-            }
-
-
-            solution.pop();
-
-            usedColumns.delete(column);
-        }
-
-
-        return false;
+        usedColumns.delete(column);
     }
 
 
-    return search(0)
-        ? solution
-        : null;
+    return false;
 }
 
 
+return search(0)
+    ? solution
+    : null;
+
+
+}
+
 /*
- * ============================================================
- * GÉNÉRATION DES ZONES
- * ============================================================
+
+* ============================================================
+* GÉNÉRATION DES ZONES
+* ============================================================
+  */
+
+function generateRegions(
+solution,
+size,
+regionCount
+) {
+
+
+const zones =
+    new Array(
+        size * size
+    ).fill(-1);
+
+
+const frontiers =
+    Array.from(
+        { length: regionCount },
+        () => new Set()
+    );
+
+
+const sizes =
+    new Array(regionCount)
+        .fill(1);
+
+
+/*
+ * Chaque dino devient la graine
+ * d'une zone différente.
  */
 
-function generateRegions(solution) {
+solution.forEach(
+    (index, zone) => {
 
-    const zones =
-        new Array(
-            SIZE * SIZE
-        ).fill(-1);
-
-
-    const frontiers =
-        Array.from(
-            { length: REGION_COUNT },
-            () => new Set()
-        );
+        zones[index] = zone;
+    }
+);
 
 
-    const sizes =
-        new Array(REGION_COUNT)
-            .fill(1);
+/*
+ * Initialiser les frontières.
+ */
 
-
-    /*
-     * Chaque chat devient la graine
-     * d'une zone différente.
-     */
-
-    solution.forEach(
-        (index, zone) => {
-
-            zones[index] = zone;
-        }
-    );
-
-
-    /*
-     * Initialiser les frontières.
-     */
-
-    solution.forEach(
-        (index, zone) => {
-
-            for (
-                const neighbor
-                of getOrthogonalNeighbors(index)
-            ) {
-
-                if (
-                    zones[neighbor] === -1
-                ) {
-
-                    frontiers[zone]
-                        .add(neighbor);
-                }
-            }
-        }
-    );
-
-
-    let assigned =
-        solution.length;
-
-
-    /*
-     * Faire grandir les zones.
-     */
-
-    while (
-        assigned < SIZE * SIZE
-    ) {
-
-        const available =
-            frontiers
-                .map(
-                    (frontier, zone) => ({
-                        zone,
-                        size: frontier.size
-                    })
-                )
-                .filter(
-                    item =>
-                        item.size > 0
-                );
-
-
-        if (
-            available.length === 0
-        ) {
-
-            return null;
-        }
-
-
-        /*
-         * Trier les régions par taille.
-         *
-         * Les petites régions sont prioritaires.
-         */
-
-        available.sort(
-            (a, b) =>
-                sizes[a.zone] -
-                sizes[b.zone]
-        );
-
-
-        /*
-         * On choisit très souvent une petite zone,
-         * mais avec une part d'aléatoire.
-         */
-
-        const candidateCount =
-            Math.min(
-                3,
-                available.length
-            );
-
-
-        const selected =
-            available[
-                randomInt(
-                    0,
-                    candidateCount - 1
-                )
-            ];
-
-
-        const zone =
-            selected.zone;
-
-
-        const frontier =
-            Array.from(
-                frontiers[zone]
-            );
-
-
-        const cell =
-            frontier[
-                randomInt(
-                    0,
-                    frontier.length - 1
-                )
-            ];
-
-
-        /*
-         * La case peut avoir été prise.
-         */
-
-        if (
-            zones[cell] !== -1
-        ) {
-
-            frontiers[zone]
-                .delete(cell);
-
-            continue;
-        }
-
-
-        /*
-         * Attribuer la case.
-         */
-
-        zones[cell] = zone;
-
-        sizes[zone]++;
-
-        assigned++;
-
-
-        /*
-         * Retirer cette case de toutes les frontières.
-         */
-
-        for (
-            const frontierSet
-            of frontiers
-        ) {
-
-            frontierSet.delete(cell);
-        }
-
-
-        /*
-         * Ajouter ses voisins à la frontière.
-         */
+solution.forEach(
+    (index, zone) => {
 
         for (
             const neighbor
-            of getOrthogonalNeighbors(cell)
+            of getOrthogonalNeighbors(
+                index,
+                size
+            )
         ) {
 
             if (
@@ -503,275 +374,484 @@ function generateRegions(solution) {
             }
         }
     }
+);
 
 
-    /*
-     * Éviter les zones trop déséquilibrées.
-     */
+let assigned =
+    solution.length;
 
-    const minSize =
-        Math.min(...sizes);
 
-    const maxSize =
-        Math.max(...sizes);
+/*
+ * Faire grandir les zones.
+ */
+
+while (
+    assigned < size * size
+) {
+
+    const available =
+        frontiers
+            .map(
+                (frontier, zone) => ({
+                    zone,
+                    size: frontier.size
+                })
+            )
+            .filter(
+                item =>
+                    item.size > 0
+            );
 
 
     if (
-        minSize < 3 ||
-        maxSize > 12
+        available.length === 0
     ) {
 
         return null;
     }
 
 
-    return zones;
+    /*
+     * Trier les régions par taille.
+     *
+     * Les petites régions sont prioritaires.
+     */
+
+    available.sort(
+        (a, b) =>
+            a.size -
+            b.size
+    );
+
+
+    /*
+     * On choisit très souvent une petite zone,
+     * mais avec une part d'aléatoire.
+     */
+
+    const candidateCount =
+        Math.min(
+            3,
+            available.length
+        );
+
+
+    const selected =
+        available[
+            randomInt(
+                0,
+                candidateCount - 1
+            )
+        ];
+
+
+    const zone =
+        selected.zone;
+
+
+    const frontier =
+        Array.from(
+            frontiers[zone]
+        );
+
+
+    const cell =
+        frontier[
+            randomInt(
+                0,
+                frontier.length - 1
+            )
+        ];
+
+
+    /*
+     * La case peut avoir été prise.
+     */
+
+    if (
+        zones[cell] !== -1
+    ) {
+
+        frontiers[zone]
+            .delete(cell);
+
+        continue;
+    }
+
+
+    /*
+     * Attribuer la case.
+     */
+
+    zones[cell] = zone;
+
+    sizes[zone]++;
+
+    assigned++;
+
+
+    /*
+     * Retirer cette case de toutes les frontières.
+     */
+
+    for (
+        const frontierSet
+        of frontiers
+    ) {
+
+        frontierSet.delete(cell);
+    }
+
+
+    /*
+     * Ajouter ses voisins à la frontière.
+     */
+
+    for (
+        const neighbor
+        of getOrthogonalNeighbors(
+            cell,
+            size
+        )
+    ) {
+
+        if (
+            zones[neighbor] === -1
+        ) {
+
+            frontiers[zone]
+                .add(neighbor);
+        }
+    }
 }
 
 
 /*
- * ============================================================
- * VÉRIFIER LA CONNEXITÉ DES ZONES
- * ============================================================
+ * Éviter les zones trop déséquilibrées.
  */
 
-function areRegionsConnected(zones) {
+const minSize =
+    Math.min(...sizes);
+
+
+const maxSize =
+    Math.max(...sizes);
+
+
+if (
+    minSize < 3 ||
+    maxSize > 12
+) {
+
+    return null;
+}
+
+
+return zones;
+
+
+}
+
+/*
+
+* ============================================================
+* VÉRIFIER LA CONNEXITÉ DES ZONES
+* ============================================================
+  */
+
+function areRegionsConnected(
+zones,
+size,
+regionCount
+) {
+
+
+for (
+    let zone = 0;
+    zone < regionCount;
+    zone++
+) {
+
+    const cells = [];
+
 
     for (
-        let zone = 0;
-        zone < REGION_COUNT;
-        zone++
+        let i = 0;
+        i < zones.length;
+        i++
     ) {
 
-        const cells = [];
+        if (
+            zones[i] === zone
+        ) {
+
+            cells.push(i);
+        }
+    }
+
+
+    if (
+        cells.length === 0
+    ) {
+
+        return false;
+    }
+
+
+    const visited =
+        new Set([
+            cells[0]
+        ]);
+
+
+    const queue =
+        [cells[0]];
+
+
+    while (
+        queue.length > 0
+    ) {
+
+        const current =
+            queue.shift();
 
 
         for (
-            let i = 0;
-            i < zones.length;
-            i++
+            const neighbor
+            of getOrthogonalNeighbors(
+                current,
+                size
+            )
         ) {
 
             if (
-                zones[i] === zone
+                zones[neighbor] !== zone
             ) {
 
-                cells.push(i);
+                continue;
             }
-        }
 
 
-        if (
-            cells.length === 0
-        ) {
-
-            return false;
-        }
-
-
-        const visited =
-            new Set([
-                cells[0]
-            ]);
-
-
-        const queue =
-            [cells[0]];
-
-
-        while (
-            queue.length > 0
-        ) {
-
-            const current =
-                queue.shift();
-
-
-            for (
-                const neighbor
-                of getOrthogonalNeighbors(current)
+            if (
+                visited.has(neighbor)
             ) {
 
-                if (
-                    zones[neighbor] !== zone
-                ) {
-
-                    continue;
-                }
-
-
-                if (
-                    visited.has(neighbor)
-                ) {
-
-                    continue;
-                }
-
-
-                visited.add(neighbor);
-
-                queue.push(neighbor);
+                continue;
             }
-        }
 
 
-        if (
-            visited.size !==
-            cells.length
-        ) {
+            visited.add(neighbor);
 
-            return false;
+            queue.push(neighbor);
         }
     }
 
 
-    return true;
+    if (
+        visited.size !==
+        cells.length
+    ) {
+
+        return false;
+    }
+}
+
+
+return true;
+
+
+}
+
+/*
+
+* ============================================================
+* TENTATIVE DE GÉNÉRATION
+* ============================================================
+  */
+
+function tryGeneratePuzzle(size) {
+
+
+/*
+ * Le nombre de zones est égal
+ * au nombre de dinos.
+ */
+
+const regionCount =
+    size;
+
+
+/*
+ * 1. Solution.
+ */
+
+const solution =
+    generateSolution(size);
+
+
+if (!solution) {
+
+    return null;
 }
 
 
 /*
- * ============================================================
- * TENTATIVE DE GÉNÉRATION
- * ============================================================
+ * 2. Zones.
  */
 
-function tryGeneratePuzzle() {
-
-    /*
-     * 1. Solution.
-     */
-
-    const solution =
-        generateSolution();
+const zones =
+    generateRegions(
+        solution,
+        size,
+        regionCount
+    );
 
 
-    if (!solution) {
-        return null;
-    }
+if (!zones) {
+
+    return null;
+}
 
 
-    /*
-     * 2. Zones.
-     */
+/*
+ * 3. Sécurité : zones continues.
+ */
 
-    const zones =
-        generateRegions(solution);
-
-
-    if (!zones) {
-        return null;
-    }
-
-
-    /*
-     * 3. Sécurité : zones continues.
-     */
-
-    if (
-        !areRegionsConnected(zones)
-    ) {
-
-        return null;
-    }
-
-
-    /*
-     * 4. Unicité.
-     */
-
-    const result =
-        countSolutions(
-            zones,
-            SIZE,
-            2
-        );
-
-
-    /*
-     * Nous voulons exactement
-     * une solution.
-     */
-
-    if (
-        result.count !== 1
-    ) {
-
-        return null;
-    }
-
-
-    return {
-
-        size: SIZE,
-
+if (
+    !areRegionsConnected(
         zones,
+        size,
+        regionCount
+    )
+) {
 
-        solution:
-            solution.map(
-                index =>
-                    index % SIZE
-            ),
-
-        metadata: {
-            solverNodes:
-                result.nodes
-        }
-    };
+    return null;
 }
 
 
 /*
- * ============================================================
- * GÉNÉRATEUR ASYNCHRONE
- * ============================================================
- *
- * C'est la partie importante.
- *
- * On laisse le navigateur reprendre la main entre
- * les groupes de tentatives.
- * ============================================================
+ * 4. Unicité.
  */
 
-export async function generatePuzzle() {
-
-    while (true) {
-
-        /*
-         * Faire seulement quelques tentatives
-         * avant de rendre la main au navigateur.
-         */
-
-        for (
-            let i = 0;
-            i < ATTEMPTS_PER_BATCH;
-            i++
-        ) {
-
-            const puzzle =
-                tryGeneratePuzzle();
+const result =
+    countSolutions(
+        zones,
+        size,
+        2
+    );
 
 
-            if (puzzle) {
+/*
+ * Nous voulons exactement
+ * une solution.
+ */
 
-                return puzzle;
-            }
-        }
+if (
+    result.count !== 1
+) {
 
-
-        /*
-         * Donner au navigateur une respiration.
-         *
-         * Sans cela, une longue génération pourrait
-         * bloquer complètement l'interface.
-         */
-
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    0
-                )
-        );
-    }
+    return null;
 }
 
+
+return {
+
+    size,
+
+    zones,
+
+    solution:
+        solution.map(
+            index =>
+                index % size
+        ),
+
+    metadata: {
+
+        solverNodes:
+            result.nodes
+    }
+};
+
+
+}
+
+/*
+
+* ============================================================
+* GÉNÉRATEUR ASYNCHRONE
+* ============================================================
+*
+* La taille peut maintenant être précisée :
+*
+* generatePuzzle(5)
+* generatePuzzle(6)
+* generatePuzzle(7)
+*
+* Si aucune taille n'est donnée,
+* on utilise DEFAULT_SIZE.
+* ============================================================
+  */
+
+export async function generatePuzzle(
+size = DEFAULT_SIZE
+) {
+
+
+/*
+ * Vérification simple de la taille.
+ */
+
+if (
+    !Number.isInteger(size) ||
+    size < 4
+) {
+
+    throw new Error(
+        "La taille de la grille doit être un entier supérieur ou égal à 4."
+    );
+}
+
+
+while (true) {
+
+    /*
+     * Faire seulement quelques tentatives
+     * avant de rendre la main au navigateur.
+     */
+
+    for (
+        let i = 0;
+        i < ATTEMPTS_PER_BATCH;
+        i++
+    ) {
+
+        const puzzle =
+            tryGeneratePuzzle(size);
+
+
+        if (puzzle) {
+
+            return puzzle;
+        }
+    }
+
+
+    /*
+     * Donner au navigateur une respiration.
+     *
+     * Sans cela, une longue génération pourrait
+     * bloquer complètement l'interface.
+     */
+
+    await new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                0
+            )
+    );
+}
+
+
+}

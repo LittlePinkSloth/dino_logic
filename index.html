@@ -1,174 +1,187 @@
-
 <!DOCTYPE html>
 
 <html lang="fr">
 
 <head>
 
-    <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+<meta charset="UTF-8">
 
-    <title>Dino Logic</title>
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
-    <!-- version jouable navigateur -->
-
-    <link
-    rel="manifest"
-    href="manifest.json"
-    >
+<title>Dino Logic</title>
 
 
-    <!-- CSS -->
+<!-- CSS -->
 
-    <link
-        rel="stylesheet"
-        href="css/style.css"
-    >
+<link
+    rel="stylesheet"
+    href="css/style.css"
+>
+
 
 </head>
-
 
 <body>
 
 
-    <main class="app">
+<main class="app">
 
-        <h1>
-            🦖 Dino Logic
-        </h1>
-
-
-        <p class="subtitle">
-            Trouve l'emplacement de tous les dinos.
-        </p>
+    <h1>
+        🦖 Dino Logic
+    </h1>
 
 
-        <!-- Message d'état -->
+    <p class="subtitle">
+        Trouve l'emplacement de tous les dinos.
+    </p>
 
-        <div
-            id="status"
-            class="status"
-            aria-live="polite"
+
+    <!-- Message d'état -->
+
+    <div
+        id="status"
+        class="status"
+        aria-live="polite"
+    >
+        Chargement...
+    </div>
+
+
+    <!-- Choix de la taille -->
+
+    <div class="settings">
+
+        <label for="gridSize">
+            Taille de la grille
+        </label>
+
+
+        <select
+            id="gridSize"
         >
-            Chargement...
-        </div>
 
+            <option value="4">
+                4 × 4
+            </option>
 
-        <!-- Grille -->
+            <option value="5">
+                5 × 5
+            </option>
 
-        <div
-            id="board"
-            class="board"
-            aria-label="Grille de jeu"
-        ></div>
-
-
-        <!-- Boutons -->
-
-        <div class="buttons">
-
-            <button
-                id="undo"
-                class="action"
-                type="button"
+            <option
+                value="6"
+                selected
             >
-                ↶ Annuler
-            </button>
+                6 × 6
+            </option>
+
+            <option value="7">
+                7 × 7
+            </option>
+
+            <option value="8">
+                8 × 8
+            </option>
+
+        </select>
+
+    </div>
 
 
-            <button
-                id="clear"
-                class="action"
-                type="button"
-            >
-                Effacer
-            </button>
+    <!-- Grille -->
+
+    <div
+        id="board"
+        class="board"
+        aria-label="Grille de jeu"
+    ></div>
 
 
-            <button
-                id="newGame"
-                class="action primary"
-                type="button"
-            >
-                Nouvelle grille
-            </button>
+    <!-- Boutons -->
 
-        </div>
+    <div class="buttons">
 
-
-        <!-- Règles -->
-
-        <div class="rules">
-
-            <strong>
-                Règles
-            </strong>
+        <button
+            id="undo"
+            class="action"
+            type="button"
+        >
+            ↶ Annuler
+        </button>
 
 
-            <ul>
-
-                <li>
-                    🦖 Un dino par zone de couleur.
-                </li>
-
-                <li>
-                    🦖 Un dino par ligne.
-                </li>
-
-                <li>
-                    🦖 Un dino par colonne.
-                </li>
-
-                <li>
-                    🦖 Deux dinos ne peuvent pas se toucher,
-                    même en diagonale.
-                </li>
-
-            </ul>
-
-        </div>
-
-    </main>
-
-    <script>
-    if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-            navigator.serviceWorker.register("./service-worker.js")
-                .then(registration => {
-                    console.log(
-                        "Service Worker enregistré :",
-                        registration.scope
-                    );
-                })
-                .catch(error => {
-                    console.error(
-                        "Erreur Service Worker :",
-                        error
-                    );
-                });
-        });
-    }
-    </script>
+        <button
+            id="clear"
+            class="action"
+            type="button"
+        >
+            Effacer
+        </button>
 
 
-    <!--
-        IMPORTANT :
+        <button
+            id="newGame"
+            class="action primary"
+            type="button"
+        >
+            Nouvelle grille
+        </button>
 
-        type="module" permet à main.js d'utiliser
-        import/export avec les autres fichiers.
-    -->
+    </div>
 
-    <script
-        type="module"
-        src="js/main.js"
-    ></script>
+
+    <!-- Règles -->
+
+    <div class="rules">
+
+        <strong>
+            Règles
+        </strong>
+
+
+        <ul>
+
+            <li>
+                🦖 Un dino par zone de couleur.
+            </li>
+
+            <li>
+                🦖 Un dino par ligne.
+            </li>
+
+            <li>
+                🦖 Un dino par colonne.
+            </li>
+
+            <li>
+                🦖 Deux dinos ne peuvent pas se toucher,
+                même en diagonale.
+            </li>
+
+        </ul>
+
+    </div>
+
+</main>
+
+
+<!--
+    IMPORTANT :
+
+    type="module" permet à main.js d'utiliser
+    import/export avec les autres fichiers.
+-->
+
+<script
+    type="module"
+    src="js/main.js"
+></script>
 
 
 </body>
 
 </html>
-
