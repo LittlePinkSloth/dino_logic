@@ -39,7 +39,7 @@
     </h1>
 
 
-    <p class="subtitle">
+    <p id="subtitle" class="subtitle">
         Trouve l'emplacement de tous les dinos.
     </p>
 
@@ -66,16 +66,32 @@
     </div>
 
     <div class="heroic-tools">
-        <label class="heroic-toggle" for="heroicMode">
-            <input id="heroicMode" type="checkbox">
-            <span>Mode héroïque</span>
-        </label>
+        <div class="mode-option">
+            <label class="heroic-toggle" for="heroicMode">
+                <input id="heroicMode" type="checkbox">
+                <span>Mode héroïque</span>
+            </label>
+            <output id="heroicRecord" class="mode-record">🏆 Record : 0</output>
+        </div>
         <output
             id="heroicStreak"
             class="heroic-streak"
             aria-live="polite"
             hidden
         >Série : 0</output>
+        <div class="mode-option">
+            <label class="heroic-toggle" for="rushMode">
+                <input id="rushMode" type="checkbox">
+                <span>Mode Rush</span>
+            </label>
+            <output id="rushRecord" class="mode-record">🏆 Record : 0</output>
+        </div>
+        <output
+            id="rushCompleted"
+            class="heroic-streak rush-score"
+            aria-live="polite"
+            hidden
+        >Complétées : 0</output>
     </div>
 
 

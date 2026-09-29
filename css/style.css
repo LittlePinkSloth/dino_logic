@@ -64,6 +64,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 12px;
     min-height: 44px;
     margin-bottom: 12px;
@@ -90,6 +91,24 @@
     cursor: not-allowed;
   }
 
+  .mode-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+  }
+
+  .mode-record {
+    color: #707789;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .heroic-toggle input#rushMode {
+    accent-color: #16815f;
+  }
+
   .heroic-streak {
     padding: 6px 10px;
     border: 1px solid #d4d7df;
@@ -99,6 +118,14 @@
     font-size: 13px;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
+  }
+
+  body.rush-mode .timer {
+    color: #16815f;
+  }
+
+  body.rush-mode .timer.urgent {
+    color: #d64545;
   }
 
   .status.success {
@@ -157,6 +184,15 @@
 
   .cell.invalid {
     box-shadow: inset 0 0 0 4px #df4242;
+  }
+
+  .cell.incorrect-cell {
+    background-color: rgba(220, 40, 50, 0.22);
+    box-shadow: inset 0 0 0 4px #df4242;
+  }
+
+  .dino.incorrect {
+    filter: drop-shadow(0 0 4px rgba(190, 20, 30, 0.9));
   }
 
   .dino {

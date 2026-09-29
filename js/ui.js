@@ -26,10 +26,15 @@ import {
     
     let boardElement;
     let statusElement;
+    let subtitleElement;
     let difficultyElement;
     let timerElement;
     let heroicModeInput;
     let heroicStreakElement;
+    let rushModeInput;
+    let rushCompletedElement;
+    let heroicRecordElement;
+    let rushRecordElement;
     let undoButton;
     let clearButton;
     let newGameButton;
@@ -37,6 +42,7 @@ import {
     let bonusLifeButton;
     let bonusDinoButton;
     let bonusMarksButton;
+    const DOUBLE_TAP_DELAY = 180;
     let clickTimer = null;
     let pendingClickIndex = null;
     let pointerGesture = null;
@@ -48,11 +54,20 @@ import {
     let heroicMode = false;
     let heroicStreak = 0;
     let lastHeroicStreak = null;
+    let rushMode = false;
+    let rushCompleted = 0;
+    let rushBonusUsed = false;
+    let rushFinished = false;
+    let rushTransitionPending = false;
     let puzzleStarted = false;
     let lastSolvedState = false;
     let lastGameOverState = false;
     let currentTimeLimit =
         getHeroicTimeLimit("découverte");
+    const RUSH_TIME_LIMIT = 15 * 60 * 1000;
+    const PROGRESS_STORAGE_KEY = "dinoLogicProgress";
+    const progress = loadProgress();
+    let lastTrackedPuzzle = null;
     
     /*
     
@@ -70,6 +85,9 @@ import {
     statusElement =
         document.getElementById("status");
 
+    subtitleElement =
+        document.getElementById("subtitle");
+
     difficultyElement =
         document.getElementById("difficulty");
 
@@ -81,6 +99,18 @@ import {
 
     heroicStreakElement =
         document.getElementById("heroicStreak");
+
+    rushModeInput =
+        document.getElementById("rushMode");
+
+    rushCompletedElement =
+        document.getElementById("rushCompleted");
+
+    heroicRecordElement =
+        document.getElementById("heroicRecord");
+
+    rushRecordElement =
+        document.getElementById("rushRecord");
     
     undoButton =
         document.getElementById("undo");
@@ -107,10 +137,15 @@ import {
     if (
         !boardElement ||
         !statusElement ||
+        !subtitleElement ||
         !difficultyElement ||
         !timerElement ||
         !heroicModeInput ||
         !heroicStreakElement ||
+        !rushModeInput ||
+        !rushCompletedElement ||
+        !heroicRecordElement ||
+        !rushRecordElement ||
         !undoButton ||
         !clearButton ||
         !newGameButton ||
@@ -131,11 +166,6 @@ import {
     boardElement.addEventListener(
         "click",
         handleCellClick
-    );
-
-    boardElement.addEventListener(
-        "dblclick",
-        handleCellDoubleClick
     );
 
     boardElement.addEventListener(
@@ -163,6 +193,11 @@ import {
         "change",
         () => {
             heroicMode = heroicModeInput.checked;
+            if (heroicMode) {
+                rushModeInput.checked = false;
+                rushMode = false;
+                document.body.classList.remove("rush-mode");
+            }
             document.body.classList.toggle(
                 "heroic-mode",
                 heroicMode
@@ -172,27 +207,45 @@ import {
     );
 
 
+    rushModeInput.addEventListener(
+        "change",
+        () => {
+            rushMode = rushModeInput.checked;
+
+            if (rushMode) {
+                heroicModeInput.checked = false;
+                heroicMode = false;
+                rushCompleted = 0;
+                rushBonusUsed = false;
+                rushFinished = false;
+                currentTimeLimit = RUSH_TIME_LIMIT;
+            }
+
+            document.body.classList.remove("heroic-mode");
+            document.body.classList.toggle("rush-mode", rushMode);
+            render();
+        }
+    );
+
+
     bonusLifeButton.addEventListener(
         "click",
         () => {
-            useBonusLife();
-            render();
+            useBonus(useBonusLife);
         }
     );
 
     bonusDinoButton.addEventListener(
         "click",
         () => {
-            useBonusDino();
-            render();
+            useBonus(useBonusDino);
         }
     );
 
     bonusMarksButton.addEventListener(
         "click",
         () => {
-            useBonusMarks();
-            render();
+            useBonus(useBonusMarks);
         }
     );
     
@@ -254,6 +307,7 @@ import {
 
             stopTimer();
             heroicModeInput.disabled = true;
+            rushModeInput.disabled = true;
     
             newGameButton.disabled = true;
     
@@ -265,21 +319,6 @@ import {
     
             statusElement.className =
                 "status";
-    
-    
-            /*
-             * Lire la taille sélectionnée.
-             *
-             * La valeur d'un <select> est toujours
-             * une chaîne de caractères.
-             *
-             * On la convertit donc en nombre.
-             */
-    
-            const size =
-                Number(
-                    gridSizeElement.value
-                );
     
     
             /*
@@ -296,16 +335,69 @@ import {
             );
     
     
-            await newPuzzle(size);
+            if (rushMode) {
+                rushCompleted = 0;
+                rushBonusUsed = false;
+                rushFinished = false;
+                rushTransitionPending = false;
+                currentTimeLimit = RUSH_TIME_LIMIT;
+                await newPuzzle(getRandomRushSize());
+            }
+            else if (heroicMode) {
+                const nextLevel = heroicStreak + 1;
+                const minimumDifficulty =
+                    getHeroicMinimumDifficulty(nextLevel);
+                let meetsDifficulty = false;
+
+                while (!meetsDifficulty) {
+                    const size =
+                        Math.floor(Math.random() * 4) + 4;
+
+                    await newPuzzle(size);
+
+                    const puzzle = getGameState().puzzle;
+                    const difficulty =
+                        puzzle.metadata.difficulty ??
+                        getDifficulty(puzzle.metadata.solverNodes);
+
+                    meetsDifficulty =
+                        !minimumDifficulty ||
+                        isDifficultyAtLeast(
+                            difficulty,
+                            minimumDifficulty
+                        );
+                }
+            }
+            else {
+                await newPuzzle(
+                    Number(gridSizeElement.value)
+                );
+            }
 
             resetTimer();
+
+            if (rushMode) {
+                puzzleStarted = true;
+            }
     
             render();
+
+            if (rushMode) {
+                await new Promise(
+                    resolve =>
+                        requestAnimationFrame(
+                            () => resolve()
+                        )
+                );
+
+                startTimer();
+            }
     
     
             newGameButton.disabled = false;
     
-            gridSizeElement.disabled = false;
+            gridSizeElement.disabled = heroicMode || rushMode;
+            newGameButton.disabled = rushMode && !rushFinished;
         }
     );
     
@@ -331,6 +423,7 @@ import {
     renderStatus(state);
     renderDifficulty(state);
     updateTimer(state);
+    renderProgress(state);
     renderHeroicControls();
     
     renderButtons(state);
@@ -349,8 +442,10 @@ import {
             state.puzzle.metadata.difficulty ??
             getDifficulty(solverNodes);
 
-        currentTimeLimit =
-            getHeroicTimeLimit(difficulty);
+        if (!rushMode) {
+            currentTimeLimit =
+                getHeroicTimeLimit(difficulty);
+        }
 
         const label =
             difficulty.charAt(0).toUpperCase() +
@@ -373,6 +468,7 @@ import {
         timerStartedAt = Date.now();
         puzzleStarted = true;
         heroicModeInput.disabled = true;
+        rushModeInput.disabled = true;
         timerInterval = setInterval(tickTimer, 250);
         renderTimer();
     }
@@ -406,6 +502,7 @@ import {
         lastGameOverState = false;
         lastHeroicStreak = null;
         heroicModeInput.disabled = false;
+        rushModeInput.disabled = false;
         renderTimer();
     }
 
@@ -419,9 +516,49 @@ import {
             stopTimer();
         }
 
+        let shouldAdvanceRush = false;
+
+        if (rushMode) {
+            if (state.timeExpired && state.gameOver) {
+                rushFinished = true;
+                rushTransitionPending = false;
+                puzzleStarted = false;
+                heroicModeInput.disabled = false;
+                rushModeInput.disabled = false;
+                newGameButton.disabled = false;
+            }
+            else if (
+                !rushFinished &&
+                !rushTransitionPending &&
+                state.solved &&
+                !lastSolvedState
+            ) {
+                rushCompleted++;
+                if (rushCompleted > progress.rushRecord) {
+                    progress.rushRecord = rushCompleted;
+                    saveProgress();
+                }
+                rushTransitionPending = true;
+                shouldAdvanceRush = true;
+            }
+            else if (
+                !rushFinished &&
+                !rushTransitionPending &&
+                state.gameOver &&
+                !lastGameOverState
+            ) {
+                rushTransitionPending = true;
+                shouldAdvanceRush = true;
+            }
+        }
+
         if (heroicMode) {
             if (state.solved && !lastSolvedState) {
                 heroicStreak++;
+                if (heroicStreak > progress.heroicRecord) {
+                    progress.heroicRecord = heroicStreak;
+                    saveProgress();
+                }
             }
             else if (state.gameOver && !lastGameOverState) {
                 lastHeroicStreak = heroicStreak;
@@ -433,13 +570,17 @@ import {
         lastGameOverState = state.gameOver;
 
         renderTimer();
+
+        if (shouldAdvanceRush) {
+            advanceRushPuzzle();
+        }
     }
 
 
     function tickTimer() {
 
         if (
-            heroicMode &&
+            (heroicMode || rushMode) &&
             getElapsedMilliseconds() >= currentTimeLimit
         ) {
             expireGameByTime();
@@ -465,7 +606,8 @@ import {
         const elapsed = getElapsedMilliseconds();
         const remaining = currentTimeLimit - elapsed;
 
-        const totalSeconds = heroicMode
+        const isCountdown = heroicMode || rushMode;
+        const totalSeconds = isCountdown
             ? Math.ceil(
                 Math.max(0, remaining) / 1000
             )
@@ -489,12 +631,12 @@ import {
 
         timerElement.setAttribute(
             "aria-label",
-            heroicMode ? "Temps restant" : "Temps écoulé"
+            isCountdown ? "Temps restant" : "Temps écoulé"
         );
 
         timerElement.classList.toggle(
             "urgent",
-            heroicMode &&
+            isCountdown &&
             timerStartedAt !== null &&
             remaining <= 30 * 1000
         );
@@ -504,15 +646,182 @@ import {
     function renderHeroicControls() {
 
         heroicModeInput.disabled = puzzleStarted;
+        rushModeInput.disabled = puzzleStarted;
+        gridSizeElement.disabled = heroicMode || rushMode;
         heroicStreakElement.hidden = !heroicMode;
         heroicStreakElement.textContent =
             `Série : ${heroicStreak}`;
+        rushCompletedElement.hidden = !rushMode;
+        rushCompletedElement.textContent =
+            `Complétées : ${rushCompleted}`;
+    }
+
+
+    function renderProgress(state) {
+
+        if (state.puzzle !== lastTrackedPuzzle) {
+            lastTrackedPuzzle = state.puzzle;
+
+            if (!heroicMode && !rushMode) {
+                progress.classicGridCount++;
+                saveProgress();
+            }
+        }
+
+        subtitleElement.textContent =
+            !heroicMode && !rushMode
+                ? `Grille n°${progress.classicGridCount} : trouve l'emplacement de tous les dinos.`
+                : "Trouve l'emplacement de tous les dinos.";
+
+        heroicRecordElement.textContent =
+            `🏆 Record : ${progress.heroicRecord}`;
+
+        rushRecordElement.textContent =
+            `🏆 Record : ${progress.rushRecord}`;
+    }
+
+
+    function loadProgress() {
+
+        const emptyProgress = {
+            classicGridCount: 0,
+            heroicRecord: 0,
+            rushRecord: 0
+        };
+
+        try {
+            const stored = JSON.parse(
+                localStorage.getItem(PROGRESS_STORAGE_KEY) || "{}"
+            );
+
+            return {
+                classicGridCount: readProgressCount(
+                    stored.classicGridCount
+                ),
+                heroicRecord: readProgressCount(
+                    stored.heroicRecord
+                ),
+                rushRecord: readProgressCount(
+                    stored.rushRecord
+                )
+            };
+        }
+        catch {
+            return emptyProgress;
+        }
+    }
+
+
+    function readProgressCount(value) {
+
+        return Number.isSafeInteger(value) && value >= 0
+            ? value
+            : 0;
+    }
+
+
+    function saveProgress() {
+
+        try {
+            localStorage.setItem(
+                PROGRESS_STORAGE_KEY,
+                JSON.stringify(progress)
+            );
+        }
+        catch {
+            // Storage may be unavailable in private or restricted contexts.
+        }
+    }
+
+
+    function getRandomRushSize() {
+
+        return Math.floor(Math.random() * 4) + 4;
+    }
+
+
+    async function advanceRushPuzzle() {
+
+        newGameButton.disabled = true;
+        statusElement.textContent =
+            "🦖 Génération de la grille suivante...";
+        statusElement.className = "status";
+
+        await new Promise(
+            resolve =>
+                requestAnimationFrame(
+                    () => resolve()
+                )
+        );
+
+        await newPuzzle(getRandomRushSize());
+
+        rushTransitionPending = false;
+        render();
+
+        await new Promise(
+            resolve =>
+                requestAnimationFrame(
+                    () => resolve()
+                )
+        );
+
+        if (rushMode && !rushFinished) {
+            timerStopped = false;
+            startTimer();
+        }
+
+        newGameButton.disabled = rushMode && !rushFinished;
+    }
+
+
+    function useBonus(bonusAction) {
+
+        if (rushMode && rushBonusUsed) {
+            return;
+        }
+
+        const used = bonusAction();
+
+        if (used && rushMode) {
+            rushBonusUsed = true;
+        }
+
+        render();
+    }
+
+
+    function getHeroicMinimumDifficulty(level) {
+
+        if (level >= 10 && level % 10 === 0) {
+            return "difficile";
+        }
+
+        if (level % 10 === 5) {
+            return "normal";
+        }
+
+        return null;
+    }
+
+
+    function isDifficultyAtLeast(difficulty, minimumDifficulty) {
+
+        const difficultyRank = {
+            "découverte": 0,
+            facile: 1,
+            normal: 2,
+            difficile: 3
+        };
+
+        return difficultyRank[difficulty] >=
+            difficultyRank[minimumDifficulty];
     }
 
 
     function isBoardInputAllowed() {
 
-        if (!heroicMode) {
+        if (!heroicMode && !rushMode) {
             return true;
         }
 
@@ -524,13 +833,25 @@ import {
     function renderBonusButtons(state) {
 
         bonusLifeButton.disabled =
-            heroicMode || !state.bonusAvailability.life;
+            heroicMode ||
+            (rushMode && rushBonusUsed) ||
+            state.gameOver ||
+            state.solved ||
+            !state.bonusAvailability.life;
 
         bonusDinoButton.disabled =
-            heroicMode || !state.bonusAvailability.dino;
+            heroicMode ||
+            (rushMode && rushBonusUsed) ||
+            state.gameOver ||
+            state.solved ||
+            !state.bonusAvailability.dino;
 
         bonusMarksButton.disabled =
-            heroicMode || !state.bonusAvailability.marks;
+            heroicMode ||
+            (rushMode && rushBonusUsed) ||
+            state.gameOver ||
+            state.solved ||
+            !state.bonusAvailability.marks;
     }
 
         /*
@@ -703,19 +1024,21 @@ import {
 
         const index = Number(cell.dataset.index);
 
-        if (
-            clickTimer !== null &&
-            pendingClickIndex !== index
-        ) {
+        if (clickTimer !== null) {
             clearTimeout(clickTimer);
+
+            if (pendingClickIndex === index) {
+                clickTimer = null;
+                pendingClickIndex = null;
+                toggleCell(index);
+                render();
+                return;
+            }
+
             toggleMark(pendingClickIndex);
             render();
             clickTimer = null;
             pendingClickIndex = null;
-        }
-
-        if (clickTimer !== null) {
-            clearTimeout(clickTimer);
         }
 
         pendingClickIndex = index;
@@ -727,33 +1050,8 @@ import {
                 clickTimer = null;
                 pendingClickIndex = null;
             },
-            250
+            DOUBLE_TAP_DELAY
         );
-    }
-
-
-    function handleCellDoubleClick(event) {
-
-        const cell = event.target.closest(".cell");
-
-        if (!cell) {
-            return;
-        }
-
-        if (!isBoardInputAllowed()) {
-            return;
-        }
-
-        event.preventDefault();
-
-        if (clickTimer !== null) {
-            clearTimeout(clickTimer);
-            clickTimer = null;
-            pendingClickIndex = null;
-        }
-
-        toggleCell(Number(cell.dataset.index));
-        render();
     }
 
 
@@ -948,7 +1246,11 @@ import {
     ) {
     
         statusElement.textContent =
-            heroicMode
+            rushMode
+                ? state.timeExpired
+                    ? `⏱ Temps écoulé ! ${formatRushCompleted(rushCompleted)}.`
+                    : "💥 Grille ratée. Passage à la suivante..."
+                : heroicMode
                 ? state.timeExpired
                     ? `⏱ Temps écoulé ! Série : ${formatHeroicStreak(lastHeroicStreak ?? heroicStreak)}.`
                     : `💀 Partie terminée : ${formatHeroicStreak(lastHeroicStreak ?? heroicStreak)}.`
@@ -967,13 +1269,21 @@ import {
     ) {
     
         statusElement.textContent =
-            "🎉 Bravo ! Grille résolue !";
+            rushMode
+                ? "🎉 Grille complétée. Préparation de la suivante..."
+                : "🎉 Bravo ! Grille résolue !";
     
         statusElement.classList.add(
             "success"
         );
     
         return;
+    }
+
+
+    function formatRushCompleted(count) {
+
+        return `${count} grille${count === 1 ? "" : "s"} complétée${count === 1 ? "" : "s"}`;
     }
     
     
