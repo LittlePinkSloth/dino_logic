@@ -4,10 +4,26 @@ import {
     isValidGrid,
     solveSudoku
 } from "./sudoku-solver.js";
+import { initGameShell } from "../../common/ui/game-shell.js";
+import { showSuccessAnimation } from "../../common/ui/success-animation.js";
+import {
+    readStatistics,
+    writeStatistics
+} from "../../common/storage/statistics.js";
 
 const SIZE = 9;
 const STORAGE_KEY = "littlePinkSloth.sudoku.v1";
+const STATISTICS_KEY = "littlePinkSloth.sudoku.stats.v1";
 const LEVEL_NAMES = { easy: "Facile", medium: "Moyen", hard: "Difficile" };
+const statistics = readStatistics(
+    STATISTICS_KEY,
+    () => ({ completedPuzzles: 0 }),
+    saved => ({
+        completedPuzzles: Number.isSafeInteger(saved?.completedPuzzles) && saved.completedPuzzles >= 0
+            ? saved.completedPuzzles
+            : 0
+    })
+);
 const boardElement = document.querySelector("#board");
 const statusElement = document.querySelector("#game-status");
 const levelElement = document.querySelector("#current-level");
@@ -23,10 +39,25 @@ let solution = null;
 let current = null;
 let currentDifficulty = "easy";
 let selectedDifficulty = "easy";
+let puzzleCompleted = false;
 let selectedCell = 40;
 let validation = null;
 let generating = false;
 let activeWorker = null;
+
+const gameShell = initGameShell({
+    statisticsLabel: "Afficher la progression",
+    statisticsTitle: "Progression",
+    helpItems: [
+        "Complète la grille 9 × 9 avec les chiffres de 1 à 9.",
+        "Chaque ligne, colonne et carré 3 × 3 utilise chaque chiffre une seule fois.",
+        "Sélectionne une case vide, puis choisis un chiffre."
+    ],
+    getStatistics: () => [
+        { label: "Grilles résolues", value: statistics.completedPuzzles },
+        { label: "Niveau actuel", value: LEVEL_NAMES[currentDifficulty] }
+    ]
+});
 
 function hasGridValues(grid) {
     return Array.isArray(grid) && grid.length === SIZE && grid.every(row =>
@@ -63,7 +94,8 @@ function saveGame() {
             current,
             solution,
             currentDifficulty,
-            selectedDifficulty
+            selectedDifficulty,
+            puzzleCompleted
         }));
     } catch {
         setStatus("La sauvegarde locale est indisponible.", "error");
@@ -94,6 +126,7 @@ function loadGame() {
         solution = saved.solution;
         currentDifficulty = saved.currentDifficulty;
         selectedDifficulty = saved.selectedDifficulty;
+        puzzleCompleted = saved.puzzleCompleted === true;
         return true;
     } catch {
         return false;
@@ -135,6 +168,7 @@ function render() {
     });
 
     levelElement.textContent = LEVEL_NAMES[currentDifficulty];
+    gameShell.renderStatistics();
     difficultyButtons.forEach(button => {
         button.setAttribute("aria-pressed", String(button.dataset.difficulty === selectedDifficulty));
         button.disabled = generating;
@@ -161,6 +195,14 @@ function evaluateGrid() {
     render();
 
     if (empty === 0 && errors === 0) {
+        if (!puzzleCompleted) {
+            puzzleCompleted = true;
+            statistics.completedPuzzles++;
+            writeStatistics(STATISTICS_KEY, statistics);
+            saveGame();
+            gameShell.renderStatistics();
+            showSuccessAnimation();
+        }
         setStatus("Sudoku terminé !", "success");
     } else if (errors) {
         setStatus(`${errors} erreur${errors === 1 ? "" : "s"}${empty ? ` · ${empty} case${empty === 1 ? "" : "s"} vide${empty === 1 ? "" : "s"}` : ""}.`, "error");
@@ -225,6 +267,7 @@ async function startNewGame() {
         current = game.puzzle.map(row => row.slice());
         solution = game.solution;
         currentDifficulty = game.difficulty;
+        puzzleCompleted = false;
         selectedCell = 40;
         validation = null;
         saveGame();

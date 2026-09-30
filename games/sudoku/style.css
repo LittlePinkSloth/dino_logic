@@ -43,19 +43,6 @@ button { font: inherit; }
     margin-bottom: 8px;
 }
 
-.back-link {
-    justify-self: start;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 44px;
-    color: var(--green);
-    font-size: 14px;
-    font-weight: 700;
-    text-decoration: none;
-}
-
-.back-link span { font-size: 20px; line-height: 1; }
 .title-wrap { text-align: center; }
 .eyebrow { margin: 0 0 2px; color: var(--muted); font-size: 9px; font-weight: 800; }
 h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 500; line-height: 1.1; }
@@ -169,9 +156,13 @@ h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 28px;
 @media (max-width: 360px) {
     :root { --cell-size: min(10.5vw, 36px); }
     .sudoku-app { width: min(100% - 20px, 520px); }
-    .game-header { min-height: 62px; }
     .sudoku-cell { font-size: 16px; }
-    .play-area { gap: 10px; }
+}
+
+@media (max-width: 400px) {
+    .game-header { min-height: 70px; margin-bottom: 20px; }
+    .level-badge { margin-right: 48px; }
+    .play-area { gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

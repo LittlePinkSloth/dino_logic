@@ -24,12 +24,6 @@
     font-size: 28px;
   }
 
-  .subtitle {
-    text-align: center;
-    color: #707789;
-    margin: 0 0 20px;
-  }
-
   .status {
     min-height: 28px;
     text-align: center;
@@ -98,13 +92,6 @@
     gap: 1px;
   }
 
-  .mode-record {
-    color: #707789;
-    font-size: 12px;
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-  }
-
   .heroic-toggle input#rushMode {
     accent-color: #16815f;
   }
@@ -134,49 +121,6 @@
 
   .status.error {
     color: #d64545;
-  }
-
-  .fireworks {
-    position: fixed;
-    z-index: 10;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
-
-  .firework {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-  }
-
-  .firework i {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #f2bd36;
-    animation: firework-particle 1.15s ease-out var(--delay, 0ms) both;
-  }
-
-  .firework i:nth-child(6n + 1) { background: #f2bd36; }
-  .firework i:nth-child(6n + 2) { background: #ef5a67; }
-  .firework i:nth-child(6n + 3) { background: #36a889; }
-  .firework i:nth-child(6n + 4) { background: #4e8fe5; }
-  .firework i:nth-child(6n + 5) { background: #bd65d6; }
-  .firework i:nth-child(6n) { background: #f47b36; }
-
-  @keyframes firework-particle {
-    from {
-      opacity: 1;
-      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(0.4);
-    }
-    to {
-      opacity: 0;
-      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(var(--distance)) scale(1);
-    }
   }
 
   .board {
@@ -412,104 +356,6 @@
     background: #4f55d4;
   }
 
-  /*
-   * ==========================================================
-   * RÈGLES
-   * ==========================================================
-   */
-
-  .game-tools {
-    position: fixed;
-    z-index: 20;
-    top: max(12px, env(safe-area-inset-top));
-    right: max(12px, env(safe-area-inset-right));
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .game-tool {
-    position: relative;
-  }
-
-  .rules-trigger {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border: 1px solid #c8ccd5;
-    border-radius: 50%;
-    background: white;
-    color: #252a38;
-    font: inherit;
-    font-size: 20px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(37, 42, 56, 0.14);
-  }
-
-  .rules-trigger:hover {
-    background: #f7f7f9;
-  }
-
-  .rules-trigger:focus-visible {
-    outline: 3px solid #5b61e8;
-    outline-offset: 2px;
-  }
-
-  .rules-popup,
-  .records-popup {
-    position: absolute;
-    top: 0;
-    right: calc(100% + 8px);
-    width: min(320px, calc(100vw - 76px));
-    padding: 14px 16px;
-    border: 1px solid #dedfe5;
-    border-radius: 8px;
-    background: white;
-    color: #656c7d;
-    font-size: 14px;
-    line-height: 1.45;
-    box-shadow: 0 8px 24px rgba(37, 42, 56, 0.18);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(6px);
-    transition:
-      opacity 0.16s ease,
-      transform 0.16s ease,
-      visibility 0.16s;
-  }
-
-  .game-tool:hover .rules-popup,
-  .game-tool:hover .records-popup,
-  .game-tool:focus-within .rules-popup,
-  .game-tool:focus-within .records-popup {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .rules-popup strong,
-  .records-popup strong {
-    color: #252a38;
-  }
-
-  .rules-popup ul,
-  .records-popup ul {
-    margin: 8px 0 0;
-    padding-left: 20px;
-  }
-
-  .rules-popup li,
-  .records-popup li {
-    margin: 4px 0;
-  }
-
-  .records-popup output {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-
   body.heroic-mode {
     background: #171a1f;
     color: #e7e9ed;
@@ -564,6 +410,7 @@
   }
 
   body.heroic-mode .rules-trigger,
+  body.heroic-mode .records-trigger,
   body.heroic-mode .rules-popup,
   body.heroic-mode .records-popup {
     border-color: #454c56;
@@ -574,13 +421,6 @@
   body.heroic-mode .rules-popup strong,
   body.heroic-mode .records-popup strong {
     color: #e7e9ed;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .rules-popup,
-    .records-popup {
-      transition: none;
-    }
   }
 
   @media (max-width: 400px) {
@@ -595,53 +435,4 @@
     .bonus-actions {
       width: 94vw;
     }
-  }
-
-  .launcher-link {
-    position: fixed;
-    z-index: 20;
-    top: max(14px, env(safe-area-inset-top));
-    left: max(14px, env(safe-area-inset-left));
-    display: grid;
-    width: 34px;
-    height: 34px;
-    place-items: center;
-    border: 1px solid #d4d7df;
-    border-radius: 50%;
-    background: white;
-    color: #252a38;
-    font-size: 18px;
-    text-decoration: none;
-    box-shadow: 0 2px 8px rgba(37, 42, 56, 0.14);
-  }
-
-  .launcher-link:focus-visible,
-  .records-trigger:focus-visible {
-    outline: 3px solid #5b61e8;
-    outline-offset: 2px;
-  }
-
-  .records-trigger {
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border: 1px solid #c8ccd5;
-    border-radius: 50%;
-    background: white;
-    color: #252a38;
-    font: inherit;
-    font-size: 18px;
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(37, 42, 56, 0.14);
-  }
-
-  .records-trigger:hover {
-    background: #f7f7f9;
-  }
-
-  body.heroic-mode .records-trigger {
-    border-color: #454c56;
-    background: #272c34;
-    color: #e7e9ed;
   }

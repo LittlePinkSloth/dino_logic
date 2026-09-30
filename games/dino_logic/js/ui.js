@@ -15,6 +15,13 @@ import {
     getDifficulty,
     getHeroicTimeLimit
 } from "./difficulty.js";
+
+import { initGameShell } from "../../../common/ui/game-shell.js";
+import { showSuccessAnimation } from "../../../common/ui/success-animation.js";
+import {
+    readStatistics,
+    writeStatistics
+} from "../../../common/storage/statistics.js";
     
     /*
     
@@ -31,9 +38,7 @@ import {
     let heroicStreakElement;
     let rushModeInput;
     let rushCompletedElement;
-    let heroicRecordElement;
-    let rushRecordElement;
-    let classicGridRecordElement;
+    let gameShell;
     let clearButton;
     let newGameButton;
     let gridSizeElement;
@@ -101,15 +106,6 @@ import {
     rushCompletedElement =
         document.getElementById("rushCompleted");
 
-    heroicRecordElement =
-        document.getElementById("heroicRecord");
-
-    rushRecordElement =
-        document.getElementById("rushRecord");
-
-    classicGridRecordElement =
-        document.getElementById("classicGridRecord");
-    
     clearButton =
         document.getElementById("clear");
     
@@ -138,9 +134,6 @@ import {
         !heroicStreakElement ||
         !rushModeInput ||
         !rushCompletedElement ||
-        !heroicRecordElement ||
-        !rushRecordElement ||
-        !classicGridRecordElement ||
         !clearButton ||
         !newGameButton ||
         !gridSizeElement ||
@@ -155,6 +148,20 @@ import {
     
         return;
     }
+
+    gameShell = initGameShell({
+        helpItems: [
+            "🦖 Un dino par zone de couleur.",
+            "🦖 Un dino par ligne.",
+            "🦖 Un dino par colonne.",
+            "🦖 Deux dinos ne peuvent pas se toucher, même en diagonale."
+        ],
+        getStatistics: () => [
+            { label: "Grille normale", value: progress.classicGridCount },
+            { label: "Record héroïque", value: progress.heroicRecord },
+            { label: "Record Rush", value: progress.rushRecord }
+        ]
+    });
 
 
     boardElement.addEventListener(
@@ -496,7 +503,7 @@ import {
         let shouldAdvanceRush = false;
 
         if (state.solved && !lastSolvedState) {
-            launchFireworks();
+            showSuccessAnimation();
 
             if (!heroicMode && !rushMode) {
                 progress.classicGridAdvancePending = true;
@@ -560,55 +567,6 @@ import {
         if (shouldAdvanceRush) {
             advanceRushPuzzle();
         }
-    }
-
-
-    function launchFireworks() {
-
-        if (
-            window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
-        ) {
-            return;
-        }
-
-        const fireworks = document.createElement("div");
-        fireworks.className = "fireworks";
-        fireworks.setAttribute("aria-hidden", "true");
-
-        const positions = [
-            ["22%", "30%"],
-            ["76%", "34%"],
-            ["50%", "62%"]
-        ];
-
-        for (const [burstIndex, [left, top]] of positions.entries()) {
-            const burst = document.createElement("span");
-            burst.className = "firework";
-            burst.style.left = left;
-            burst.style.top = top;
-            burst.style.setProperty(
-                "--delay",
-                `${burstIndex * 120}ms`
-            );
-
-            for (let index = 0; index < 14; index++) {
-                const particle = document.createElement("i");
-                particle.style.setProperty(
-                    "--angle",
-                    `${180 + index * (360 / 14)}deg`
-                );
-                particle.style.setProperty(
-                    "--distance",
-                    `${65 + Math.random() * 75}px`
-                );
-                burst.appendChild(particle);
-            }
-
-            fireworks.appendChild(burst);
-        }
-
-        document.body.appendChild(fireworks);
-        setTimeout(() => fireworks.remove(), 1800);
     }
 
 
@@ -708,14 +666,7 @@ import {
             }
         }
 
-        heroicRecordElement.textContent =
-            String(progress.heroicRecord);
-
-        rushRecordElement.textContent =
-            String(progress.rushRecord);
-
-        classicGridRecordElement.textContent =
-            String(progress.classicGridCount);
+        gameShell.renderStatistics();
     }
 
 
@@ -728,12 +679,10 @@ import {
             rushRecord: 0
         };
 
-        try {
-            const stored = JSON.parse(
-                localStorage.getItem(PROGRESS_STORAGE_KEY) || "{}"
-            );
-
-            return {
+        return readStatistics(
+            PROGRESS_STORAGE_KEY,
+            () => emptyProgress,
+            stored => ({
                 classicGridCount: Math.max(
                     1,
                     readProgressCount(stored.classicGridCount)
@@ -746,11 +695,8 @@ import {
                 rushRecord: readProgressCount(
                     stored.rushRecord
                 )
-            };
-        }
-        catch {
-            return emptyProgress;
-        }
+            })
+        );
     }
 
 
@@ -764,15 +710,7 @@ import {
 
     function saveProgress() {
 
-        try {
-            localStorage.setItem(
-                PROGRESS_STORAGE_KEY,
-                JSON.stringify(progress)
-            );
-        }
-        catch {
-            // Storage may be unavailable in private or restricted contexts.
-        }
+        writeStatistics(PROGRESS_STORAGE_KEY, progress);
     }
 
 

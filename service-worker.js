@@ -1,5 +1,5 @@
 
-const LAUNCHER_CACHE = "LPS_LAUNCHER_V2";
+const LAUNCHER_CACHE = "LPS_LAUNCHER_V6";
 const GAME_STATE_CACHE = "LPS_GAME_STATE_V1";
 const ROOT_URL = new URL(self.registration.scope);
 const LAUNCHER_FILES = [
@@ -10,6 +10,10 @@ const LAUNCHER_FILES = [
     "launcher/launcher.js",
     "launcher/game-manager.js",
     "launcher/storage.js",
+    "common/styles/common.css",
+    "common/ui/game-shell.js",
+    "common/ui/success-animation.js",
+    "common/storage/statistics.js",
     "config/games.json",
     "assets/icons/icon-192.png",
     "assets/icons/icon-512.png"
