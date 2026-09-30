@@ -1,0 +1,16 @@
+{
+  "id": "sudoku",
+  "name": "Sudoku",
+  "version": "1.0.0",
+  "description": "Grilles de logique classiques en 9 x 9",
+  "icon": "assets/icon.png",
+  "files": [
+    "index.html",
+    "game.js",
+    "sudoku-solver.js",
+    "sudoku-generator.js",
+    "sudoku-worker.js",
+    "style.css",
+    "assets/icon.png"
+  ]
+}

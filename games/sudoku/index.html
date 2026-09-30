@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f3f5f4">
+    <meta name="description" content="Un Sudoku classique 9 x 9 à jouer hors ligne.">
+    <title>Sudoku · Little Pink Sloth</title>
+    <link rel="icon" href="assets/icon.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="sudoku-app">
+        <header class="game-header">
+            <a class="back-link" href="../../" aria-label="Retour au launcher">
+                <span aria-hidden="true">←</span> Retour
+            </a>
+            <div class="title-wrap">
+                <p class="eyebrow">LITTLE PINK SLOTH</p>
+                <h1>Sudoku</h1>
+            </div>
+            <span id="current-level" class="level-badge">Facile</span>
+        </header>
+
+        <section class="play-area" aria-label="Partie de Sudoku">
+            <div id="board" class="board" role="grid" aria-label="Grille de Sudoku 9 par 9"></div>
+
+            <div class="entry-area">
+                <div class="number-pad" aria-label="Pavé numérique">
+                    <button class="number-key" type="button" data-value="1" aria-label="Saisir 1">1</button>
+                    <button class="number-key" type="button" data-value="2" aria-label="Saisir 2">2</button>
+                    <button class="number-key" type="button" data-value="3" aria-label="Saisir 3">3</button>
+                    <button class="number-key" type="button" data-value="4" aria-label="Saisir 4">4</button>
+                    <button class="number-key" type="button" data-value="5" aria-label="Saisir 5">5</button>
+                    <button class="number-key" type="button" data-value="6" aria-label="Saisir 6">6</button>
+                    <button class="number-key" type="button" data-value="7" aria-label="Saisir 7">7</button>
+                    <button class="number-key" type="button" data-value="8" aria-label="Saisir 8">8</button>
+                    <button class="number-key" type="button" data-value="9" aria-label="Saisir 9">9</button>
+                    <button id="erase" class="erase-key" type="button" aria-label="Effacer la case sélectionnée">Effacer</button>
+                </div>
+            </div>
+
+            <p id="game-status" class="game-status" role="status" aria-live="polite"></p>
+
+            <div class="game-actions">
+                <button id="check-grid" class="check-button" type="button">Vérifier la grille</button>
+                <button id="new-grid" class="new-button" type="button">Nouvelle grille</button>
+            </div>
+
+            <fieldset class="difficulty-picker">
+                <legend>Niveau de la prochaine grille</legend>
+                <div class="difficulty-options">
+                    <button type="button" data-difficulty="easy" aria-pressed="true">Facile</button>
+                    <button type="button" data-difficulty="medium" aria-pressed="false">Moyen</button>
+                    <button type="button" data-difficulty="hard" aria-pressed="false">Difficile</button>
+                </div>
+            </fieldset>
+        </section>
+    </main>
+    <script type="module" src="game.js"></script>
+</body>
+</html>

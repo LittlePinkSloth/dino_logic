@@ -1,0 +1,179 @@
+:root {
+    color-scheme: light;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    color: #273a37;
+    background: #f3f5f4;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    --ink: #273a37;
+    --muted: #657571;
+    --line: #d8e0dc;
+    --green: #34745d;
+    --green-light: #dcece4;
+    --coral: #bd5861;
+    --coral-light: #f8e1e0;
+    --cell-size: min(10.5vw, 48px);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    min-width: 300px;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f3f5f4;
+    background-image: linear-gradient(135deg, #eaf0ec 0, transparent 38%),
+        radial-gradient(#cbd8d0 0.6px, transparent 0.6px);
+    background-size: auto, 18px 18px;
+}
+
+button { font: inherit; }
+
+.sudoku-app {
+    width: min(100% - 28px, 520px);
+    margin: 0 auto;
+    padding: max(12px, env(safe-area-inset-top)) 0 max(20px, env(safe-area-inset-bottom));
+}
+
+.game-header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    min-height: 70px;
+    margin-bottom: 8px;
+}
+
+.back-link {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 44px;
+    color: var(--green);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.back-link span { font-size: 20px; line-height: 1; }
+.title-wrap { text-align: center; }
+.eyebrow { margin: 0 0 2px; color: var(--muted); font-size: 9px; font-weight: 800; }
+h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 28px; font-weight: 500; line-height: 1.1; }
+
+.level-badge {
+    justify-self: end;
+    padding: 6px 9px;
+    border: 1px solid #cbded2;
+    border-radius: 5px;
+    background: #e4efe8;
+    color: #315e4d;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.play-area { display: grid; justify-items: center; gap: 12px; }
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(9, minmax(0, 1fr));
+    width: min(100%, 468px);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 2px solid #48665b;
+    border-radius: 3px;
+    background: #48665b;
+    gap: 1px;
+    box-shadow: 0 5px 16px #28453716;
+    touch-action: manipulation;
+    user-select: none;
+}
+
+.sudoku-cell {
+    position: relative;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+    color: #28644f;
+    font-size: clamp(16px, 5vw, 25px);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sudoku-cell:nth-child(3n) { border-right: 2px solid #83988d; }
+.sudoku-cell:nth-child(9n) { border-right: 0; }
+.sudoku-cell:nth-child(n + 19):nth-child(-n + 27),
+.sudoku-cell:nth-child(n + 46):nth-child(-n + 54) { border-bottom: 2px solid #83988d; }
+.sudoku-cell:nth-child(n + 73) { border-bottom: 0; }
+.sudoku-cell.given { color: #273a37; font-weight: 800; }
+.sudoku-cell.related { background: #f0f5f2; }
+.sudoku-cell.same-value { background: #dcece4; }
+.sudoku-cell.selected { z-index: 1; outline: 2px solid #34745d; outline-offset: -2px; background: #deeee5; }
+.sudoku-cell.checked-correct { color: #28644f; }
+.sudoku-cell.wrong,
+.sudoku-cell.conflict { z-index: 2; background: var(--coral-light); color: #9a3139; }
+.sudoku-cell.wrong::after,
+.sudoku-cell.conflict::after { position: absolute; inset: 2px; border: 1px solid var(--coral); content: ""; pointer-events: none; }
+.sudoku-cell:focus-visible { z-index: 3; outline: 3px solid #bc7654; outline-offset: -3px; }
+.sudoku-cell:disabled { opacity: 1; cursor: default; }
+
+.entry-area { width: min(100%, 300px); }
+.number-pad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.number-key,
+.erase-key {
+    min-height: 46px;
+    border: 1px solid #d5dfda;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    font-size: 19px;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+.number-key:active,
+.erase-key:active { background: var(--green-light); }
+.erase-key { grid-column: 1 / -1; min-height: 40px; color: var(--muted); font-size: 13px; }
+.number-key:focus-visible,
+.erase-key:focus-visible,
+.game-actions button:focus-visible,
+.difficulty-options button:focus-visible { outline: 3px solid #bc7654; outline-offset: 2px; }
+
+.game-status { min-height: 20px; margin: 0; color: var(--muted); font-size: 13px; font-weight: 700; text-align: center; }
+.game-status.error { color: #a33d43; }
+.game-status.success { color: #286c50; }
+.game-status.loading { color: #4a6c5e; }
+.game-status.success { animation: success-in 220ms ease-out both; }
+
+.game-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: min(100%, 420px); }
+.game-actions button { min-height: 46px; padding: 8px 10px; border: 0; border-radius: 5px; font-size: 13px; font-weight: 800; cursor: pointer; }
+.check-button { background: var(--green); color: white; }
+.new-button { border: 1px solid #cbd8d1 !important; background: #fff; color: var(--ink); }
+.game-actions button:disabled,
+.difficulty-options button:disabled,
+.number-key:disabled,
+.erase-key:disabled { opacity: .55; cursor: wait; }
+
+.difficulty-picker { width: min(100%, 420px); margin: 0; padding: 0; border: 0; }
+.difficulty-picker legend { width: 100%; margin-bottom: 6px; color: var(--muted); font-size: 11px; font-weight: 700; text-align: center; }
+.difficulty-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.difficulty-options button { min-height: 40px; border: 1px solid #d5dfda; border-radius: 5px; background: #fff; color: var(--muted); font-size: 12px; font-weight: 800; cursor: pointer; }
+.difficulty-options button[aria-pressed="true"] { border-color: var(--green); background: var(--green-light); color: #285743; }
+
+@keyframes success-in { from { opacity: .35; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 360px) {
+    :root { --cell-size: min(10.5vw, 36px); }
+    .sudoku-app { width: min(100% - 20px, 520px); }
+    .game-header { min-height: 62px; }
+    .sudoku-cell { font-size: 16px; }
+    .play-area { gap: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+}
