@@ -1,10 +1,10 @@
 {
-    "id": "/dino_logic/",
-    "name": "Dino Logic",
-    "short_name": "Dino Logic",
-    "description": "Un puzzle logique de dinos.",
-    "start_url": "/dino_logic/index.html",
-    "scope": "/dino_logic/",
+    "id": "./",
+    "name": "Little Pink Sloth",
+    "short_name": "Pink Sloth",
+    "description": "Une collection de mini-jeux à emporter.",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#ffffff",
@@ -12,13 +12,13 @@
 
     "icons": [
         {
-            "src": "/dino_logic/icons/icon-192.png",
+            "src": "assets/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "/dino_logic/icons/icon-512.png",
+            "src": "assets/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any"

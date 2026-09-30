@@ -1,149 +1,94 @@
 
-const CACHE_NAME = "dino-logic-v2";
-
-
-const FILES_TO_CACHE = [
-
+const LAUNCHER_CACHE = "LPS_LAUNCHER_V1";
+const GAME_STATE_CACHE = "LPS_GAME_STATE_V1";
+const ROOT_URL = new URL(self.registration.scope);
+const LAUNCHER_FILES = [
     "./",
-
-    "./index.html",
-
-    "./manifest.json",
-
-    "./css/style.css",
-
-    "./js/main.js",
-    "./js/game.js",
-    "./js/generator.js",
-    "./js/difficulty.js",
-    "./js/solver.js",
-    "./js/ui.js",
-
-    "./icons/icon-192.png",
-    "./icons/icon-512.png"
-
+    "index.html",
+    "manifest.json",
+    "launcher/launcher.css",
+    "launcher/launcher.js",
+    "launcher/game-manager.js",
+    "launcher/storage.js",
+    "config/games.json",
+    "assets/icons/icon-192.png",
+    "assets/icons/icon-512.png"
 ];
 
+self.addEventListener("install", event => {
+    event.waitUntil((async () => {
+        const cache = await caches.open(LAUNCHER_CACHE);
+        await cache.addAll(LAUNCHER_FILES.map(path => new URL(path, ROOT_URL)));
+        await self.skipWaiting();
+    })());
+});
 
-/*
- * ============================================================
- * INSTALLATION
- * ============================================================
- */
+self.addEventListener("activate", event => {
+    event.waitUntil((async () => {
+        const names = await caches.keys();
+        await Promise.all(names
+            .filter(name => name === "dino-logic-v2" ||
+                (name.startsWith("LPS_LAUNCHER_") && name !== LAUNCHER_CACHE))
+            .map(name => caches.delete(name)));
+        await self.clients.claim();
+    })());
+});
 
-self.addEventListener(
-    "install",
-    event => {
+async function getActiveGameCache(url) {
+    const gamePath = url.pathname.slice(ROOT_URL.pathname.length);
+    const match = /^games\/([a-z0-9_-]+)\//i.exec(gamePath);
+    if (!match) return null;
 
-        event.waitUntil(
+    const gameId = match[1];
+    const markerUrl = new URL(`__lps_internal__/active/${encodeURIComponent(gameId)}`, ROOT_URL);
+    const stateCache = await caches.open(GAME_STATE_CACHE);
+    const marker = await stateCache.match(markerUrl);
+    if (!marker) return null;
+    const state = await marker.json();
+    return caches.open(`LPS_GAME_${gameId}_${state.version}`);
+}
 
-            caches.open(
-                CACHE_NAME
-            )
-            .then(
-                cache =>
-                    cache.addAll(
-                        FILES_TO_CACHE
-                    )
-            )
+self.addEventListener("fetch", event => {
+    const request = event.request;
+    const url = new URL(request.url);
+    if (request.method !== "GET" || url.origin !== ROOT_URL.origin) return;
+    if (!url.pathname.startsWith(ROOT_URL.pathname)) return;
 
-        );
-
-
-        /*
-         * Active immédiatement
-         * le nouveau service worker.
-         */
-
-        self.skipWaiting();
+    const appPath = url.pathname.slice(ROOT_URL.pathname.length);
+    if (appPath.startsWith("games/")) {
+        event.respondWith((async () => {
+            if (!url.searchParams.has("lps_network")) {
+                const gameCache = await getActiveGameCache(url);
+                const cached = gameCache && await gameCache.match(new URL(url.pathname, url.origin));
+                if (cached) return cached;
+            }
+            try {
+                return await fetch(request);
+            } catch {
+                return new Response("Ce jeu n'est pas disponible hors ligne.", {
+                    status: 503,
+                    headers: { "Content-Type": "text/plain; charset=utf-8" }
+                });
+            }
+        })());
+        return;
     }
-);
 
-
-/*
- * ============================================================
- * ACTIVATION
- * ============================================================
- */
-
-self.addEventListener(
-    "activate",
-    event => {
-
-        event.waitUntil(
-
-            caches.keys()
-                .then(
-                    keys =>
-                        Promise.all(
-
-                            keys
-                                .filter(
-                                    key =>
-                                        key !==
-                                        CACHE_NAME
-                                )
-                                .map(
-                                    key =>
-                                        caches.delete(
-                                            key
-                                        )
-                                )
-
-                        )
-                )
-
-        );
-
-
-        self.clients.claim();
+    const shellPath = appPath === "" ? "index.html" : appPath;
+    if (LAUNCHER_FILES.includes(`./${shellPath}`) || LAUNCHER_FILES.includes(shellPath) || shellPath === "index.html") {
+        event.respondWith((async () => {
+            const cache = await caches.open(LAUNCHER_CACHE);
+            const cached = await cache.match(request, { ignoreSearch: true });
+            if (cached) return cached;
+            try {
+                return await fetch(request);
+            } catch {
+                return new Response("Ressource du launcher indisponible hors ligne.", {
+                    status: 503,
+                    headers: { "Content-Type": "text/plain; charset=utf-8" }
+                });
+            }
+        })());
     }
-);
-
-
-/*
- * ============================================================
- * REQUÊTES
- * ============================================================
- */
-
-self.addEventListener(
-    "fetch",
-    event => {
-
-        event.respondWith(
-
-            caches.match(
-                event.request
-            )
-            .then(
-                cachedResponse => {
-
-                    /*
-                     * Si le fichier est déjà en cache,
-                     * on l'utilise.
-                     */
-
-                    if (
-                        cachedResponse
-                    ) {
-
-                        return cachedResponse;
-                    }
-
-
-                    /*
-                     * Sinon on essaie le réseau.
-                     */
-
-                    return fetch(
-                        event.request
-                    );
-
-                }
-            )
-
-        );
-    }
-);
+});
 

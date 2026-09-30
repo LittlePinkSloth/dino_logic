@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Dino Logic · Little Pink Sloth</title>
+
+<!-- CSS -->
+
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
+
+</head>
+
+<body>
+
+<a class="launcher-link" href="../../">Little Pink Sloth</a>
+
+
+<div class="rules-help">
+
+    <button
+        class="rules-trigger"
+        type="button"
+        aria-label="Afficher les règles du jeu"
+        aria-describedby="rulesPopup"
+        title="Règles du jeu"
+    >?</button>
+
+    <div id="rulesPopup" class="rules-popup" role="tooltip">
+        <strong>Règles du jeu</strong>
+        <ul>
+            <li>🦖 Un dino par zone de couleur.</li>
+            <li>🦖 Un dino par ligne.</li>
+            <li>🦖 Un dino par colonne.</li>
+            <li>🦖 Deux dinos ne peuvent pas se toucher, même en diagonale.</li>
+        </ul>
+    </div>
+
+</div>
+
+
+<main class="app">
+
+    <h1>
+        🦖 Dino Logic
+    </h1>
+
+
+    <p id="subtitle" class="subtitle">
+        Trouve l'emplacement de tous les dinos.
+    </p>
+
+
+    <!-- Message d'état -->
+
+    <div
+        id="status"
+        class="status"
+        aria-live="polite"
+    >
+        Chargement...
+    </div>
+
+    <div class="puzzle-meta">
+        <span id="difficulty" class="difficulty"></span>
+        <span class="meta-divider" aria-hidden="true">·</span>
+        <span
+            id="timer"
+            class="timer"
+            role="timer"
+            aria-label="Temps écoulé"
+        >00:00</span>
+    </div>
+
+    <div class="heroic-tools">
+        <div class="mode-option">
+            <label class="heroic-toggle" for="heroicMode">
+                <input id="heroicMode" type="checkbox">
+                <span>Mode héroïque</span>
+            </label>
+            <output id="heroicRecord" class="mode-record">🏆 0</output>
+        </div>
+        <output
+            id="heroicStreak"
+            class="heroic-streak"
+            aria-live="polite"
+            hidden
+        >Série : 0</output>
+        <div class="mode-option">
+            <label class="heroic-toggle" for="rushMode">
+                <input id="rushMode" type="checkbox">
+                <span>Mode Rush</span>
+            </label>
+            <output id="rushRecord" class="mode-record">🏆 0</output>
+        </div>
+        <output
+            id="rushCompleted"
+            class="heroic-streak rush-score"
+            aria-live="polite"
+            hidden
+        >Complétées : 0</output>
+    </div>
+
+
+    <!-- Grille -->
+
+    <div
+        id="board"
+        class="board"
+        aria-label="Grille de jeu"
+    ></div>
+
+
+    <!-- Bonus -->
+
+    <div class="bonus-actions" aria-label="Bonus">
+
+        <button
+            id="bonusLife"
+            class="bonus"
+            type="button"
+            aria-label="Ajouter une vie"
+            title="Ajouter une vie"
+        >
+            <span class="bonus-icon" aria-hidden="true">❤️</span>
+            <span>+1 vie</span>
+        </button>
+
+        <button
+            id="bonusDino"
+            class="bonus"
+            type="button"
+            aria-label="Placer un dino"
+            title="Placer un dino"
+        >
+            <span class="bonus-icon" aria-hidden="true">🦖</span>
+            <span>Dino</span>
+        </button>
+
+        <button
+            id="bonusMarks"
+            class="bonus"
+            type="button"
+            aria-label="Marquer jusqu'à trois cases"
+            title="Marquer jusqu'à trois cases"
+        >
+            <span class="bonus-icon" aria-hidden="true">✕</span>
+            <span>3 croix</span>
+        </button>
+
+    </div>
+
+
+    <!-- Boutons -->
+
+    <div class="buttons">
+
+        <button
+            id="clear"
+            class="action"
+            type="button"
+        >
+            Effacer
+        </button>
+
+
+        <div class="new-game-controls">
+
+            <div class="settings">
+
+                <label for="gridSize">
+                    Taille
+                </label>
+
+                <select id="gridSize">
+                    <option value="4">4 × 4</option>
+                    <option value="5">5 × 5</option>
+                    <option value="6" selected>6 × 6</option>
+                    <option value="7">7 × 7</option>
+                    <option value="8">8 × 8</option>
+                </select>
+
+            </div>
+
+            <button
+                id="newGame"
+                class="action primary"
+                type="button"
+            >
+                Nouvelle grille
+            </button>
+
+        </div>
+
+    </div>
+
+
+</main>
+
+
+<!--
+    IMPORTANT :
+
+    type="module" permet à main.js d'utiliser
+    import/export avec les autres fichiers.
+-->
+
+<script
+    type="module"
+    src="game.js"
+></script>
+
+
+</body>
+
+</html>

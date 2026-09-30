@@ -1,0 +1,20 @@
+{
+  "id": "dino_logic",
+  "name": "Dino Logic",
+  "version": "1.0.0",
+  "description": "Puzzle logique avec des dinosaures",
+  "icon": "assets/icon-192.png",
+  "files": [
+    "index.html",
+    "game.js",
+    "style.css",
+    "js/main.js",
+    "js/game.js",
+    "js/generator.js",
+    "js/difficulty.js",
+    "js/solver.js",
+    "js/ui.js",
+    "assets/icon-192.png",
+    "assets/icon-512.png"
+  ]
+}

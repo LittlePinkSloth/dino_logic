@@ -576,3 +576,18 @@
       width: 94vw;
     }
   }
+
+  .launcher-link {
+    position: fixed;
+    z-index: 2;
+    top: max(10px, env(safe-area-inset-top));
+    left: 12px;
+    padding: 8px 10px;
+    border: 1px solid #d4d7df;
+    border-radius: 6px;
+    background: white;
+    color: #252a38;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+  }
