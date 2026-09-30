@@ -3,7 +3,7 @@
     {
       "id": "dino_logic",
       "name": "Dino Logic",
-      "description": "Puzzle logique avec des dinosaures",
+      "description": "Un jeu de logique, un jeu de dinos.",
       "version": "1.0.1",
       "path": "games/dino_logic/",
       "entry": "games/dino_logic/index.html",
