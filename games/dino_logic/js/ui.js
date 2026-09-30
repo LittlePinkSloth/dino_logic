@@ -25,7 +25,6 @@ import {
     
     let boardElement;
     let statusElement;
-    let subtitleElement;
     let difficultyElement;
     let timerElement;
     let heroicModeInput;
@@ -34,6 +33,7 @@ import {
     let rushCompletedElement;
     let heroicRecordElement;
     let rushRecordElement;
+    let classicGridRecordElement;
     let clearButton;
     let newGameButton;
     let gridSizeElement;
@@ -83,9 +83,6 @@ import {
     statusElement =
         document.getElementById("status");
 
-    subtitleElement =
-        document.getElementById("subtitle");
-
     difficultyElement =
         document.getElementById("difficulty");
 
@@ -109,6 +106,9 @@ import {
 
     rushRecordElement =
         document.getElementById("rushRecord");
+
+    classicGridRecordElement =
+        document.getElementById("classicGridRecord");
     
     clearButton =
         document.getElementById("clear");
@@ -132,7 +132,6 @@ import {
     if (
         !boardElement ||
         !statusElement ||
-        !subtitleElement ||
         !difficultyElement ||
         !timerElement ||
         !heroicModeInput ||
@@ -141,6 +140,7 @@ import {
         !rushCompletedElement ||
         !heroicRecordElement ||
         !rushRecordElement ||
+        !classicGridRecordElement ||
         !clearButton ||
         !newGameButton ||
         !gridSizeElement ||
@@ -708,16 +708,14 @@ import {
             }
         }
 
-        subtitleElement.textContent =
-            !heroicMode && !rushMode
-                ? `Grille n°${progress.classicGridCount} : trouve l'emplacement de tous les dinos.`
-                : "Trouve l'emplacement de tous les dinos.";
-
         heroicRecordElement.textContent =
-            `🏆 Record : ${progress.heroicRecord}`;
+            String(progress.heroicRecord);
 
         rushRecordElement.textContent =
-            `🏆 Record : ${progress.rushRecord}`;
+            String(progress.rushRecord);
+
+        classicGridRecordElement.textContent =
+            String(progress.classicGridCount);
     }
 
 

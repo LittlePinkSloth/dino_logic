@@ -1,7 +1,7 @@
 {
   "id": "dino_logic",
   "name": "Dino Logic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Puzzle logique avec des dinosaures",
   "icon": "assets/icon-192.png",
   "files": [
