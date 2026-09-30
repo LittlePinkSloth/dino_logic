@@ -136,6 +136,49 @@
     color: #d64545;
   }
 
+  .fireworks {
+    position: fixed;
+    z-index: 10;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .firework {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+  }
+
+  .firework i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f2bd36;
+    animation: firework-particle 1.15s ease-out var(--delay, 0ms) both;
+  }
+
+  .firework i:nth-child(6n + 1) { background: #f2bd36; }
+  .firework i:nth-child(6n + 2) { background: #ef5a67; }
+  .firework i:nth-child(6n + 3) { background: #36a889; }
+  .firework i:nth-child(6n + 4) { background: #4e8fe5; }
+  .firework i:nth-child(6n + 5) { background: #bd65d6; }
+  .firework i:nth-child(6n) { background: #f47b36; }
+
+  @keyframes firework-particle {
+    from {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(0.4);
+    }
+    to {
+      opacity: 0;
+      transform: translate(-50%, -50%) rotate(var(--angle)) translateY(var(--distance)) scale(1);
+    }
+  }
+
   .board {
     width: min(90vw, 500px);
     aspect-ratio: 1;
@@ -216,37 +259,37 @@
    * ==========================================================
    */
 
-  .zone-0 {
-    background: #f4b8c6;
-  }
+.zone-0 {
+  background: #F3B6C2; /* rose */
+}
 
-  .zone-1 {
-    background: #b9d7f7;
-  }
+.zone-1 {
+  background: #AFCBEB; /* bleu */
+}
 
-  .zone-2 {
-    background: #bfe6c1;
-  }
+.zone-2 {
+  background: #B9DEB5; /* vert */
+}
 
-  .zone-3 {
-    background: #f7d58b;
-  }
+.zone-3 {
+  background: #F2D18B; /* jaune */
+}
 
-  .zone-4 {
-    background: #c9b8ed;
-  }
+.zone-4 {
+  background: #C7B5E8; /* violet */
+}
 
-  .zone-5 {
-    background: #b8e0dc;
-  }
+.zone-5 {
+  background: #A9DCD8; /* turquoise */
+}
 
-  .zone-6 {
-    background: #e8e0dc;
-  }
+.zone-6 {
+  background: #E5B99F; /* pêche / orange */
+}
 
-  .zone-7 {
-    background: #a8e0dc;
-  }
+.zone-7 {
+  background: #C7D69B; /* vert olive / anis */
+}
 
   /*
    * ==========================================================
@@ -375,29 +418,77 @@
    * ==========================================================
    */
 
-  .rules {
-    margin-top: 22px;
-
-    padding: 15px 18px;
-
-    background: white;
-    border: 1px solid #dedfe5;
-    border-radius: 12px;
-
-    font-size: 14px;
-    color: #656c7d;
+  .rules-help {
+    position: fixed;
+    z-index: 20;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
   }
 
-  .rules strong {
+  .rules-trigger {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #c8ccd5;
+    border-radius: 50%;
+    background: white;
+    color: #252a38;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(37, 42, 56, 0.14);
+  }
+
+  .rules-trigger:hover {
+    background: #f7f7f9;
+  }
+
+  .rules-trigger:focus-visible {
+    outline: 3px solid #5b61e8;
+    outline-offset: 2px;
+  }
+
+  .rules-popup {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    width: min(320px, calc(100vw - 24px));
+    padding: 14px 16px;
+    border: 1px solid #dedfe5;
+    border-radius: 8px;
+    background: white;
+    color: #656c7d;
+    font-size: 14px;
+    line-height: 1.45;
+    box-shadow: 0 8px 24px rgba(37, 42, 56, 0.18);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(6px);
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s ease,
+      visibility 0.16s;
+  }
+
+  .rules-help:hover .rules-popup,
+  .rules-help:focus-within .rules-popup {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .rules-popup strong {
     color: #252a38;
   }
 
-  .rules ul {
+  .rules-popup ul {
     margin: 8px 0 0;
     padding-left: 20px;
   }
 
-  .rules li {
+  .rules-popup li {
     margin: 4px 0;
   }
 
@@ -455,14 +546,21 @@
     background: #303640;
   }
 
-  body.heroic-mode .rules {
+  body.heroic-mode .rules-trigger,
+  body.heroic-mode .rules-popup {
     border-color: #454c56;
-    background: #22272e;
+    background: #272c34;
     color: #b1b8c2;
   }
 
-  body.heroic-mode .rules strong {
+  body.heroic-mode .rules-popup strong {
     color: #e7e9ed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rules-popup {
+      transition: none;
+    }
   }
 
   @media (max-width: 400px) {

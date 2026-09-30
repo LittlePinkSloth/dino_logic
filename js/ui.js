@@ -3,7 +3,6 @@ import {
     expireGameByTime,
     toggleCell,
     toggleMark,
-    undo,
     clearBoard,
     newPuzzle,
     isValidCell,
@@ -35,7 +34,6 @@ import {
     let rushCompletedElement;
     let heroicRecordElement;
     let rushRecordElement;
-    let undoButton;
     let clearButton;
     let newGameButton;
     let gridSizeElement;
@@ -112,9 +110,6 @@ import {
     rushRecordElement =
         document.getElementById("rushRecord");
     
-    undoButton =
-        document.getElementById("undo");
-    
     clearButton =
         document.getElementById("clear");
     
@@ -146,7 +141,6 @@ import {
         !rushCompletedElement ||
         !heroicRecordElement ||
         !rushRecordElement ||
-        !undoButton ||
         !clearButton ||
         !newGameButton ||
         !gridSizeElement ||
@@ -246,23 +240,6 @@ import {
         "click",
         () => {
             useBonus(useBonusMarks);
-        }
-    );
-    
-    
-    /*
-     * ========================================================
-     * ANNULER
-     * ========================================================
-     */
-    
-    undoButton.addEventListener(
-        "click",
-        () => {
-    
-            undo();
-    
-            render();
         }
     );
     
@@ -518,6 +495,15 @@ import {
 
         let shouldAdvanceRush = false;
 
+        if (state.solved && !lastSolvedState) {
+            launchFireworks();
+
+            if (!heroicMode && !rushMode) {
+                progress.classicGridAdvancePending = true;
+                saveProgress();
+            }
+        }
+
         if (rushMode) {
             if (state.timeExpired && state.gameOver) {
                 rushFinished = true;
@@ -574,6 +560,55 @@ import {
         if (shouldAdvanceRush) {
             advanceRushPuzzle();
         }
+    }
+
+
+    function launchFireworks() {
+
+        if (
+            window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+        ) {
+            return;
+        }
+
+        const fireworks = document.createElement("div");
+        fireworks.className = "fireworks";
+        fireworks.setAttribute("aria-hidden", "true");
+
+        const positions = [
+            ["22%", "30%"],
+            ["76%", "34%"],
+            ["50%", "62%"]
+        ];
+
+        for (const [burstIndex, [left, top]] of positions.entries()) {
+            const burst = document.createElement("span");
+            burst.className = "firework";
+            burst.style.left = left;
+            burst.style.top = top;
+            burst.style.setProperty(
+                "--delay",
+                `${burstIndex * 120}ms`
+            );
+
+            for (let index = 0; index < 14; index++) {
+                const particle = document.createElement("i");
+                particle.style.setProperty(
+                    "--angle",
+                    `${180 + index * (360 / 14)}deg`
+                );
+                particle.style.setProperty(
+                    "--distance",
+                    `${65 + Math.random() * 75}px`
+                );
+                burst.appendChild(particle);
+            }
+
+            fireworks.appendChild(burst);
+        }
+
+        document.body.appendChild(fireworks);
+        setTimeout(() => fireworks.remove(), 1800);
     }
 
 
@@ -662,8 +697,13 @@ import {
         if (state.puzzle !== lastTrackedPuzzle) {
             lastTrackedPuzzle = state.puzzle;
 
-            if (!heroicMode && !rushMode) {
+            if (
+                !heroicMode &&
+                !rushMode &&
+                progress.classicGridAdvancePending
+            ) {
                 progress.classicGridCount++;
+                progress.classicGridAdvancePending = false;
                 saveProgress();
             }
         }
@@ -684,7 +724,8 @@ import {
     function loadProgress() {
 
         const emptyProgress = {
-            classicGridCount: 0,
+            classicGridCount: 1,
+            classicGridAdvancePending: false,
             heroicRecord: 0,
             rushRecord: 0
         };
@@ -695,9 +736,12 @@ import {
             );
 
             return {
-                classicGridCount: readProgressCount(
-                    stored.classicGridCount
+                classicGridCount: Math.max(
+                    1,
+                    readProgressCount(stored.classicGridCount)
                 ),
+                classicGridAdvancePending:
+                    stored.classicGridAdvancePending === true,
                 heroicRecord: readProgressCount(
                     stored.heroicRecord
                 ),
@@ -1334,11 +1378,6 @@ import {
     
     function renderButtons(state) {
     
-    
-    undoButton.disabled =
-        heroicMode || !state.canUndo;
-
-
     clearButton.disabled =
         heroicMode &&
         (state.gameOver || state.solved);

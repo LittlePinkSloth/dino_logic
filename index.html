@@ -32,6 +32,29 @@
 <body>
 
 
+<div class="rules-help">
+
+    <button
+        class="rules-trigger"
+        type="button"
+        aria-label="Afficher les règles du jeu"
+        aria-describedby="rulesPopup"
+        title="Règles du jeu"
+    >?</button>
+
+    <div id="rulesPopup" class="rules-popup" role="tooltip">
+        <strong>Règles du jeu</strong>
+        <ul>
+            <li>🦖 Un dino par zone de couleur.</li>
+            <li>🦖 Un dino par ligne.</li>
+            <li>🦖 Un dino par colonne.</li>
+            <li>🦖 Deux dinos ne peuvent pas se toucher, même en diagonale.</li>
+        </ul>
+    </div>
+
+</div>
+
+
 <main class="app">
 
     <h1>
@@ -71,7 +94,7 @@
                 <input id="heroicMode" type="checkbox">
                 <span>Mode héroïque</span>
             </label>
-            <output id="heroicRecord" class="mode-record">🏆 Record : 0</output>
+            <output id="heroicRecord" class="mode-record">🏆 0</output>
         </div>
         <output
             id="heroicStreak"
@@ -84,7 +107,7 @@
                 <input id="rushMode" type="checkbox">
                 <span>Mode Rush</span>
             </label>
-            <output id="rushRecord" class="mode-record">🏆 Record : 0</output>
+            <output id="rushRecord" class="mode-record">🏆 0</output>
         </div>
         <output
             id="rushCompleted"
@@ -149,15 +172,6 @@
     <div class="buttons">
 
         <button
-            id="undo"
-            class="action"
-            type="button"
-        >
-            ↶ Annuler
-        </button>
-
-
-        <button
             id="clear"
             class="action"
             type="button"
@@ -196,38 +210,6 @@
 
     </div>
 
-
-    <!-- Règles -->
-
-    <div class="rules">
-
-        <strong>
-            Règles
-        </strong>
-
-
-        <ul>
-
-            <li>
-                🦖 Un dino par zone de couleur.
-            </li>
-
-            <li>
-                🦖 Un dino par ligne.
-            </li>
-
-            <li>
-                🦖 Un dino par colonne.
-            </li>
-
-            <li>
-                🦖 Deux dinos ne peuvent pas se toucher,
-                même en diagonale.
-            </li>
-
-        </ul>
-
-    </div>
 
 </main>
 
