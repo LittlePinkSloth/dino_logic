@@ -13,7 +13,7 @@
       "id": "sudoku",
       "name": "Sudoku",
       "description": "Grilles de logique classiques en 9 x 9",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "path": "games/sudoku/",
       "entry": "games/sudoku/index.html",
       "icon": "games/sudoku/assets/icon.png"

@@ -1,439 +1,162 @@
-# Architecture Little Pink Sloth
+# Little Pink Sloth - Architecture
 
-## 1. Architecture générale
+## 1. Principe général
 
-Little Pink Sloth est une PWA unique, servie en HTTPS par GitHub Pages. Le launcher, le registre et tous les jeux sont dans ce dépôt et sous le même périmètre de service worker. Un jeu n'est pas une PWA séparée. `index.html` est le launcher ; les jeux sont des modules web locaux indépendants.
+Little Pink Sloth est une collection de petits jeux de puzzle accessibles depuis une seule PWA.
 
-Les chemins sont relatifs à la racine du déploiement. Le projet fonctionne donc à `https://littlepinksloth.github.io/dino_logic/` sans supposer que le site est hébergé à la racine du domaine.
+L'application est servie par GitHub Pages en HTTPS.
 
-## 2. Rôle du launcher
+Architecture générale :
 
-`launcher/launcher.js` lit `config/games.json` et construit la liste des jeux. Il affiche l'état installé, vérifie les versions distantes lorsqu'une version locale existe et propose le lancement, l'installation ou la mise à jour. La navigation vers un jeu se fait dans le même onglet : le bouton Retour du navigateur revient au launcher ; chaque jeu fournit aussi un lien explicite vers celui-ci.
+```text
+LittlePinkSloth/
+├── index.html
+├── manifest.json
+├── service-worker.js
+├── ARCHITECTURE.md
+│
+├── launcher/
+│   ├── launcher.js
+│   └── storage.js
+│
+├── config/
+│   └── games.json
+│
+├── common/
+│   ├── ui/
+│   │   ├── game-shell.js
+│   │   └── success-animation.js
+│   ├── storage/
+│   │   └── statistics.js
+│   └── styles/
+│       └── common.css
+│
+└── games/
+    ├── dino_logic/
+    ├── sudoku/
+    ├── water_puzzle/
+    └── 1080/
+````
 
-## 3. Structure d'un jeu
+### Principes fondamentaux
 
-Chaque jeu est placé sous `games/<id>/`. Il fournit un `index.html`, `game.json`, une feuille de style, un point d'entrée JavaScript et tous ses fichiers nécessaires. Dino Logic conserve ses modules dans `js/` afin que leurs imports relatifs restent inchangés. Son `game.js` est le petit point d'entrée vers le `js/main.js` existant. Le moteur, le générateur, le solveur et la clé de progression `dinoLogicProgress` sont préservés.
-
-Les références aux ressources d'un jeu sont relatives à son dossier. Ne référencez pas les fichiers du launcher depuis le moteur d'un jeu.
-
-## 4. Registre `config/games.json`
-
-Le registre est la liste que lit le launcher. Chaque entrée indique un identifiant stable, un nom, une description, une version de catalogue, le chemin du dossier, la page d'entrée et une icône. Tous les chemins sont relatifs à la racine du déploiement.
-
-## 5. Métadonnées `game.json`
-
-Chaque jeu possède son propre `game.json` avec `id`, `name`, `version`, `description`, `icon` et `files`. `files` est la liste exhaustive des ressources statiques nécessaires au lancement hors ligne, chemins relatifs au dossier du jeu. Le gestionnaire ajoute aussi `game.json` et le point d'entrée du registre. Il n'y a pas de découverte arbitraire des ressources ni de téléchargement depuis un autre domaine.
-
-## 6. Service worker
-
-Il n'existe qu'un service worker, `service-worker.js`, enregistré à la racine du projet avec une portée relative au déploiement. Le manifeste installable unique est `manifest.json`, celui du launcher. Les pages de jeu ne déclarent aucun manifeste ni service worker.
-
-Le worker pré-cache explicitement le shell du launcher pendant l'installation. Il active la nouvelle version après ce pré-cache, puis ne nettoie que les anciens caches `LPS_LAUNCHER_*`. Il ne met pas en cache toutes les requêtes Internet. Les ressources inconnues du launcher suivent le réseau sans être ajoutées automatiquement au cache.
-
-Pour une URL sous `games/<id>/`, il lit le marqueur de version active puis cherche la ressource uniquement dans le cache de cette version. En l'absence d'une copie locale, le réseau est utilisé ; si le réseau échoue, une réponse 503 explicite est renvoyée. Les requêtes de contrôle/téléchargement portant `lps_network=1` contournent le cache du jeu pour vérifier la version publiée.
-
-## 7. Caches et stockage
-
-Le shell utilise `LPS_LAUNCHER_V1`. Chaque version de jeu a son propre cache `LPS_GAME_<id>_<version>`. Le marqueur de version active est dans `LPS_GAME_STATE_V1`. Les métadonnées d'installation (version et dates) sont isolées dans IndexedDB `little-pink-sloth`, via `launcher/storage.js`. Le stockage local de Dino Logic reste séparé et inchangé.
-
-Les caches sont des caches logiques du navigateur, pas des répertoires installés dans le système de fichiers. Les navigateurs peuvent évincer leur stockage ; l'installation peut alors devoir être refaite.
-
-## 8. Installation
-
-Au premier clic, le gestionnaire récupère `game.json` puis chaque fichier déclaré par des URL du même site. Il vérifie les réponses avant de les placer dans le cache versionné. La version active et ses métadonnées ne sont basculées qu'après la mise en cache complète. Une erreur de téléchargement supprime la tentative incomplète ; le launcher indique qu'une connexion est nécessaire.
-
-## 9. Mise à jour
-
-Quand le jeu est installé et que le navigateur est en ligne, le launcher relit le `game.json` distant avec une requête qui contourne son cache de jeu. Les numéros `major.minor.patch` sont comparés numériquement. Une version supérieure est proposée explicitement. Le nouveau cache complet est préparé d'abord ; après son succès, le marqueur actif et IndexedDB sont mis à jour, puis les anciennes versions du même jeu sont supprimées. Les caches des autres jeux ne sont jamais touchés.
-
-Pour une publication, augmentez la version dans `game.json` et gardez cohérente l'entrée `version` du registre. Changez également le suffixe `LAUNCHER_CACHE` dans le worker quand les fichiers du launcher changent, afin qu'il prépare une nouvelle coquille avant de remplacer l'ancienne.
-
-## 10. Fonctionnement hors ligne
-
-Après la première visite, le launcher et le registre sont disponibles depuis le cache du worker. Les jeux déjà installés sont servis depuis leur cache de version, sans requête réseau nécessaire à leur lancement. Un jeu jamais installé requiert une connexion pour être mis en cache. Le HTML, les scripts, styles, polices et images requis doivent tous apparaître dans `files` ; tout fichier omis peut casser le jeu hors ligne.
-
-## 11. Ajouter un jeu
-
-1. Créez `games/<id>/` avec son `index.html`, ses fichiers de jeu et son `game.json`.
-2. Déclarez dans `game.json` chaque ressource statique nécessaire dans `files` ; utilisez des chemins relatifs au dossier.
-3. Ajoutez une entrée à `config/games.json` avec le même identifiant, le nom, la version, le chemin, l'entrée et l'icône.
-4. Vérifiez que les fichiers s'ouvrent au chemin GitHub Pages avec son préfixe de dépôt, puis installez le jeu et testez-le hors ligne.
-
-Le gestionnaire et le service worker ne doivent pas nécessiter de branche spécifique au nouveau jeu.
-
-## 12. Publication GitHub Pages
-
-Publiez le dépôt tel quel avec GitHub Pages en HTTPS. Le manifeste, les icônes, la page du launcher et les jeux utilisent des chemins relatifs ; ne remplacez pas ces chemins par `/games/...` ou par une URL de dépôt externe. Le service worker doit rester à la racine du projet pour contrôler launcher et jeux.
-
-## 13. Règles pour les futurs changements/agents
-
-- Ne créez pas de manifest ni de service worker dans un jeu.
-- Ne chargez jamais le code d'un jeu depuis un dépôt ou un domaine externe.
-- Gardez chaque jeu isolé sous `games/<id>/` et donnez à chaque version un identifiant stable.
-- Déclarez dans `game.json` toutes les ressources à mettre hors ligne.
-- Incrémentez la version du jeu pour toute mise à jour de ses fichiers ; ne supprimez pas une ancienne version avant validation complète de la nouvelle.
-- Ne nettoyez que les caches appartenant à votre fonctionnalité ; le worker ne doit jamais supprimer les caches de jeux lors d'une mise à jour du launcher.
-- Préservez les chemins relatifs au sous-répertoire GitHub Pages et testez installation, retour au launcher et lancement hors ligne.
-- Ne modifiez pas le moteur d'un autre jeu pour l'intégrer au launcher.
-
-## Limites pratiques
-
-GitHub Pages est un hébergement statique : le registre et les fichiers de jeu sont publics et il n'y a pas de téléchargement différentiel. Le navigateur ne permet pas non plus de garantir une conservation permanente du cache si l'espace est sous pression. L'installation explicite et les caches versionnés fournissent le comportement offline attendu tant que le navigateur conserve les données du site.
-
-
-# Design System & UX Guidelines
-
-Cette section définit les règles communes à TOUS les mini-jeux de Little Pink Sloth.
-
-IMPORTANT :
-Ces règles sont des conventions obligatoires pour tout nouveau jeu.
-
-Lorsqu'un nouveau jeu est créé, l'agent doit automatiquement appliquer ces règles sans qu'elles aient besoin d'être répétées dans le prompt de création du jeu.
-
-L'objectif est que tous les jeux Little Pink Sloth donnent l'impression d'appartenir à la même collection, tout en conservant leur propre identité visuelle.
-
-Un nouveau jeu peut avoir ses propres couleurs, éléments graphiques et particularités, mais il doit respecter les conventions d'interface, de navigation et d'expérience utilisateur définies ci-dessous.
+* `index.html` est le launcher.
+* Il n'existe qu'une seule PWA.
+* Les jeux sont des modules web locaux de cette PWA.
+* Les jeux ne sont pas des PWA indépendantes.
+* Il n'existe qu'un seul `manifest.json`, à la racine.
+* Il n'existe qu'un seul `service-worker.js`, à la racine.
+* Les jeux utilisent des chemins relatifs.
+* Aucun jeu ne doit supposer que le site est installé à la racine du domaine.
+* Le site doit fonctionner correctement sous un chemin GitHub Pages du type :
+  `https://utilisateur.github.io/repository/`
 
 ---
 
-## 1. Philosophie générale de l'interface
+# 2. Isolation des jeux et infrastructure commune
 
-Les jeux Little Pink Sloth doivent privilégier :
+Chaque jeu possède son propre dossier :
 
-- simplicité
-- lisibilité
-- sobriété
-- confort d'utilisation
-- interface mobile-first
-- interactions tactiles évidentes
-- absence de surcharge visuelle
-- cohérence entre les différents jeux
+```text
+games/<id>/
+```
 
-L'interface doit être pensée d'abord pour un smartphone en mode portrait, sauf indication contraire explicite.
+Un jeu doit être autonome concernant :
 
-Le jeu doit rester agréable sur un petit écran sans nécessiter de zoom ou de défilement horizontal.
+* ses règles ;
+* son gameplay ;
+* son état de partie ;
+* son générateur ;
+* son solveur ;
+* ses ressources propres ;
+* ses fichiers JavaScript propres ;
+* ses fichiers CSS propres ;
+* ses images et sons propres.
 
-La décoration ne doit jamais prendre le dessus sur le jeu.
+Cependant, les jeux peuvent utiliser l'infrastructure commune située dans :
 
-La priorité est :
+```text
+common/
+```
 
-1. jouabilité
-2. lisibilité
-3. ergonomie
-4. identité visuelle
+## Règles strictes de dépendance
 
-Éviter les interfaces excessivement complexes, les animations permanentes et les éléments décoratifs inutiles.
+### Règle 1
 
----
-
-# 2. Identité commune Little Pink Sloth
-
-Tous les jeux doivent partager une structure d'interface reconnaissable.
-
-L'utilisateur doit retrouver certains éléments communs d'un jeu à l'autre.
-
-Structure générale :
-
-┌─────────────────────────────────────┐
-│ 🦥                              ❔  │
-│                                🏆  │
-│                                     │
-│                                     │
-│          CONTENU DU JEU             │
-│                                     │
-│                                     │
-│                                     │
-└─────────────────────────────────────┘
-
-Les positions exactes peuvent être adaptées à la taille du contenu, mais les éléments suivants doivent rester cohérents :
-
-- bouton "paresseux" en haut à gauche
-- bouton "?" en haut à droite
-- bouton "trophée" sous le bouton "?"
-- contenu principal centré et optimisé pour le jeu
-
-Ces éléments constituent la navigation et les fonctionnalités communes de Little Pink Sloth.
-
----
-
-# 3. Bouton Paresseux
-
-Chaque jeu doit posséder le même petit bouton de navigation Little Pink Sloth en haut à gauche.
-
-Le bouton représente le petit paresseux de Little Pink Sloth.
-
-Il sert à retourner au launcher.
-
-Il doit :
-
-- être présent sur tous les jeux
-- rester à la même position relative
-- avoir une taille adaptée au tactile
-- rester discret
-- être facilement identifiable
-- avoir une zone tactile suffisamment grande
-- utiliser la navigation prévue par l'architecture Little Pink Sloth
-
-Le bouton ne doit pas être redessiné arbitrairement pour chaque jeu.
-
-Utiliser l'asset commun Little Pink Sloth lorsque celui-ci existe.
-
-Si l'architecture fournit un composant ou une fonction commune pour ce bouton, il doit être réutilisé.
-
-Le bouton doit également fonctionner correctement avec la navigation Android et le bouton "retour" du navigateur lorsque cela est pertinent.
-
----
-
-# 4. Bouton Aide "?"
-
-Chaque jeu doit posséder le même bouton d'aide en haut à droite.
-
-Il doit être représenté par un petit bouton contenant :
-
-"?"
-
-Le bouton doit rester discret et cohérent entre les jeux.
-
-Il permet d'afficher les règles et instructions du jeu.
-
-## Comportement
-
-Sur desktop :
-
-- le survol peut afficher une information courte
-- un clic doit également permettre d'ouvrir les règles complètes
-
-Sur mobile :
-
-- il ne faut PAS dépendre uniquement du survol
-- un appui doit ouvrir les règles
-
-Les règles doivent apparaître dans une interface légère :
-
-- panneau
-- modal
-- popover
-- ou composant équivalent
-
-Le choix dépend de ce qui existe déjà dans Little Pink Sloth.
-
-Éviter de naviguer vers une nouvelle page simplement pour afficher les règles.
-
-## Contenu
-
-Chaque jeu doit fournir ses propres règles.
-
-Le composant d'aide doit conserver la même apparence et le même comportement général entre les jeux.
+**Un jeu peut importer `common/`.**
 
 Exemple :
 
-┌──────────────────────────┐
-│ Règles                   │
-│                          │
-│ Comment jouer            │
-│                          │
-│ Explication courte et    │
-│ claire du fonctionnement │
-│ du jeu.                  │
-│                          │
-│             [ Fermer ]   │
-└──────────────────────────┘
+```js
+import { createGameShell } from "../../common/ui/game-shell.js";
+```
 
-Les règles doivent être courtes et pédagogiques.
+### Règle 2
 
----
+**Un jeu ne peut jamais importer un autre jeu.**
 
-# 5. Bouton Trophée
+Interdit :
 
-Sous le bouton "?" doit se trouver un bouton représentant un trophée.
+```js
+import ... from "../dino_logic/...";
+import ... from "../sudoku/...";
+```
 
-Le trophée donne accès à la progression du joueur.
+Un jeu ne doit jamais dépendre directement de l'implémentation interne d'un autre jeu.
 
-Ce système doit être commun à tous les jeux.
+### Règle 3
 
-Le bouton doit :
+**Toute ressource `common/` utilisée doit être disponible offline via le cache commun.**
 
-- rester à la même position relative
-- utiliser le même style général
-- être discret
-- être facilement identifiable
-- être utilisable sur téléphone
+Un jeu installé doit pouvoir fonctionner hors ligne même lorsqu'il dépend de :
 
-Le contenu affiché dépend du jeu.
+```text
+common/
+```
 
-Chaque jeu doit conserver ses propres statistiques.
+Les ressources communes ne sont donc pas copiées dans les dossiers des jeux.
 
-Les statistiques doivent être persistantes localement.
+### Conséquence
 
-Elles doivent donc survivre à la fermeture du jeu et au redémarrage de l'application.
+Le modèle de dépendance autorisé est :
 
-Utiliser le système de stockage prévu par l'architecture Little Pink Sloth lorsque celui-ci existe.
+```text
+                ┌──────────────┐
+                │   launcher   │
+                └──────┬───────┘
+                       │
+                       ▼
+              ┌────────────────┐
+              │     common/    │
+              └────────────────┘
+                 ▲    ▲    ▲
+                 │    │    │
+        ┌────────┘    │    └────────┐
+        │             │             │
+        ▼             ▼             ▼
+     Sudoku       Dino Logic    Water Puzzle
+```
 
-Sinon utiliser localStorage ou IndexedDB selon la quantité et la structure des données.
+Mais jamais :
 
----
-
-# 6. Statistiques et progression
-
-Chaque jeu doit proposer des statistiques adaptées à son gameplay.
-
-Il n'est PAS nécessaire que tous les jeux affichent exactement les mêmes statistiques.
-
-Le principe est :
-
-"Conserver les informations qui rendent la progression du joueur intéressante."
-
-Pour un jeu de puzzles, les statistiques peuvent par exemple inclure :
-
-- nombre de puzzles terminés
-- nombre de puzzles terminés par difficulté
-- nombre de parties jouées
-- meilleure série
-- meilleur temps
-- temps moyen
-- taux de réussite
-- progression par mode
-- autres statistiques pertinentes au jeu
-
-L'agent doit choisir les statistiques les plus pertinentes pour le gameplay du jeu.
-
-Ne pas ajouter artificiellement des statistiques inutiles uniquement pour remplir l'écran.
+```text
+Sudoku ─────X────> Dino Logic
+Dino Logic ─X────> Sudoku
+Water Puzzle ─X──> Sudoku
+```
 
 ---
 
-# 7. Exemple de statistiques Sudoku
+# 3. `common/`
 
-Pour un Sudoku classique, une interface de trophée pourrait afficher :
+`common/` contient uniquement les fonctionnalités réellement partagées entre plusieurs jeux.
 
-Sudoku
+Structure recommandée :
 
-Puzzles résolus
-42
-
-Facile
-18
-
-Moyen
-15
-
-Difficile
-9
-
-Autres statistiques éventuellement pertinentes :
-
-- parties commencées
-- taux de réussite
-- meilleur temps par difficulté
-- meilleur temps global
-- série actuelle
-
-Ne conserver que les statistiques réellement utiles.
-
-Le système doit pouvoir évoluer si de nouveaux modes Sudoku sont ajoutés ultérieurement.
-
----
-
-# 8. Persistance des statistiques
-
-Les statistiques doivent être persistantes localement.
-
-Elles ne doivent pas dépendre d'un compte utilisateur ou d'un serveur.
-
-Objectif :
-
-Utilisateur joue une partie
-↓
-partie terminée
-↓
-statistiques mises à jour
-↓
-fermeture de l'application
-↓
-réouverture
-↓
-statistiques toujours présentes
-
-Les données doivent fonctionner hors ligne.
-
-Ne pas introduire de backend simplement pour stocker les statistiques.
-
----
-
-# 9. Écran de réussite
-
-Lorsqu'un joueur réussit un puzzle, Little Pink Sloth doit fournir un retour visuel positif.
-
-La réussite doit notamment déclencher de petits feux d'artifice.
-
-Les feux d'artifice doivent être :
-
-- courts
-- légers
-- visuellement agréables
-- non bloquants
-- adaptés à un écran de téléphone
-
-Ils doivent accompagner la réussite sans empêcher le joueur de continuer.
-
-Ne pas utiliser une animation extrêmement lourde ou permanente.
-
-Le jeu doit immédiatement indiquer que le puzzle est terminé avec succès.
-
-Exemple conceptuel :
-
-Puzzle terminé !
-
-        🎉
-
-[ Nouveau puzzle ]
-
-L'animation de réussite doit être déclenchée uniquement lorsqu'une vraie réussite est détectée.
-
-Ne jamais déclencher les feux d'artifice simplement lorsqu'une grille est remplie si celle-ci est incorrecte.
-
----
-
-# 10. Réutilisation de l'interface de Dino Logic
-
-Dino Logic constitue actuellement la référence principale de l'expérience utilisateur Little Pink Sloth.
-
-Lorsqu'un nouveau jeu est créé, l'agent doit examiner l'interface et les fonctionnalités communes déjà présentes dans Dino Logic avant de créer de nouveaux composants.
-
-Il doit réutiliser les mécanismes existants lorsque cela est pertinent.
-
-En particulier, vérifier l'existence de :
-
-- bouton paresseux
-- bouton d'aide
-- panneau de règles
-- bouton trophée
-- affichage des statistiques
-- système de réussite
-- feux d'artifice
-- animations de réussite
-- composants communs
-- styles communs
-- assets communs
-- système de stockage des statistiques
-- système de navigation vers le launcher
-
-Ne pas recréer une deuxième version d'une fonctionnalité qui existe déjà.
-
-Si une fonctionnalité actuellement spécifique à Dino Logic devrait manifestement devenir commune à Little Pink Sloth, privilégier sa généralisation plutôt que sa duplication.
-
----
-
-# 11. Évolution vers des composants communs
-
-Si plusieurs jeux ont besoin des mêmes fonctionnalités, elles doivent progressivement être extraites dans une infrastructure commune.
-
-Exemples :
-
+```text
 common/
 ├── ui/
-│   ├── back-button.js
-│   ├── help-button.js
-│   ├── trophy-button.js
+│   ├── game-shell.js
 │   └── success-animation.js
 │
 ├── storage/
@@ -441,135 +164,1232 @@ common/
 │
 └── styles/
     └── common.css
+```
 
-La structure exacte peut être différente.
+## `common/ui/game-shell.js`
 
-L'implémentation commune actuelle se trouve dans `common/` : `ui/game-shell.js` génère les boutons paresseux, aide et trophée ; `ui/success-animation.js` fournit le feedback de réussite ; `storage/statistics.js` centralise la sérialisation des statistiques ; `styles/common.css` porte les styles partagés. Les données et règles de chaque jeu restent définies dans le jeu lui-même.
+Gère les éléments communs de l'interface :
 
-Les ressources `common/` consommées par les jeux doivent être ajoutées à la liste explicite du cache shell dans `service-worker.js`. À chaque changement de ces ressources, incrémenter la version du cache shell afin que le nouveau worker les pré-cache avant activation. La version des ressources propres à un jeu doit aussi être incrémentée dans ses deux registres pour renouveler son cache de jeu.
+* bouton 🦥 vers le launcher ;
+* bouton `?` ;
+* bouton trophée ;
+* structure commune de l'interface ;
+* navigation commune si nécessaire.
 
-IMPORTANT :
+## `common/ui/success-animation.js`
 
-Ne pas créer cette abstraction simplement par anticipation.
+Gère le feedback commun de réussite :
 
-Elle doit être créée lorsqu'elle apporte une réelle réduction de duplication ou une meilleure cohérence.
+* feu d'artifice ;
+* animation courte ;
+* animation non bloquante ;
+* comportement adapté au mobile.
 
-Avant de créer un composant commun, vérifier si une fonctionnalité équivalente existe déjà.
+L'animation ne doit être déclenchée que lorsqu'une partie est réellement validée.
 
----
+## `common/storage/statistics.js`
 
-# 12. Cohérence sans uniformisation
+Centralise la gestion des statistiques communes :
 
-Les jeux ne doivent PAS tous devenir visuellement identiques.
+* lecture ;
+* écriture ;
+* sérialisation ;
+* récupération des statistiques d'un jeu.
 
-Chaque jeu peut avoir :
+Chaque jeu reste responsable de définir quelles statistiques sont pertinentes.
 
-- ses propres couleurs
-- ses propres illustrations
-- ses propres animations
-- sa propre ambiance
-- ses propres éléments de gameplay
+## `common/styles/common.css`
 
-Cependant, les éléments suivants doivent rester cohérents :
+Contient les styles réellement communs :
 
-- position du bouton paresseux
-- position du bouton ?
-- position du trophée
-- comportement des boutons communs
-- présentation des règles
-- présentation générale des statistiques
-- retour au launcher
-- feedback de réussite
-- principes d'ergonomie mobile
+* positionnement des contrôles communs ;
+* boutons communs ;
+* interface mobile ;
+* dimensions tactiles ;
+* éléments du shell ;
+* règles communes de mise en page.
 
-L'objectif est :
+Les styles propres au gameplay restent dans :
 
-"des jeux différents appartenant clairement à la même collection."
-
----
-
-# 13. Mobile-first obligatoire
-
-Tout nouveau jeu doit être conçu d'abord pour smartphone.
-
-Avant de considérer un jeu terminé, vérifier :
-
-- écran portrait
-- petite largeur d'écran
-- boutons tactiles suffisamment grands
-- texte lisible
-- absence de débordement horizontal
-- absence de zoom nécessaire
-- interface utilisable avec un seul doigt lorsque possible
-- pas d'interaction dépendant exclusivement du survol de souris
-
-Le desktop est secondaire.
-
-Le jeu peut s'adapter aux écrans plus grands, mais ne doit jamais sacrifier l'expérience mobile.
+```text
+games/<id>/css/
+```
 
 ---
 
-# 14. Mode sombre et apparence
+# 4. Utilisation de `common/`
 
-Si le projet possède déjà un système de thème, respecter celui-ci.
+Les fichiers de `common/` sont **partagés directement**.
 
-Ne pas créer un système de thème spécifique au jeu sans nécessité.
+Ils ne doivent jamais être copiés dans un jeu.
 
-Si aucun système commun n'existe encore, le nouveau jeu doit au minimum rester lisible dans les conditions normales d'utilisation du launcher.
+### Correct
 
-Les couleurs spécifiques au jeu peuvent être utilisées pour différencier son identité.
+```text
+common/
+└── ui/
+    └── game-shell.js
 
-Éviter cependant les contrastes insuffisants.
+games/
+└── sudoku/
+    └── js/
+        └── main.js
+```
+
+Puis dans `main.js` :
+
+```js
+import { createGameShell } from "../../common/ui/game-shell.js";
+```
+
+### Incorrect
+
+```text
+games/
+└── sudoku/
+    └── js/
+        ├── main.js
+        └── game-shell.js
+```
+
+La duplication de code commun est interdite.
+
+Elle créerait plusieurs copies susceptibles de diverger et rendrait les corrections plus difficiles.
+
+## Avant de créer une nouvelle fonctionnalité commune
+
+Toujours vérifier si une fonctionnalité équivalente existe déjà dans :
+
+```text
+common/
+```
+
+Si elle existe :
+
+* la réutiliser ;
+* ne pas la recopier ;
+* ne pas créer une deuxième implémentation.
+
+Si elle n'existe pas mais doit réellement être utilisée par plusieurs jeux, elle peut être ajoutée à `common/`.
+
+Ne pas créer une abstraction commune uniquement par anticipation.
 
 ---
 
-# 15. Règle pour tout futur agent IA
+# 5. Cache des ressources communes
 
-Lorsqu'un agent reçoit une demande de création ou de modification d'un jeu Little Pink Sloth, il doit :
+Les ressources de `common/` sont des dépendances partagées.
 
-1. lire ARCHITECTURE.md
-2. lire cette section Design System & UX Guidelines
-3. examiner au moins un jeu existant, en particulier Dino Logic si celui-ci est disponible
-4. identifier les composants communs existants
-5. les réutiliser lorsque cela est pertinent
-6. respecter la position et le comportement des éléments communs
-7. créer les statistiques adaptées au nouveau jeu
-8. intégrer le bouton d'aide
-9. intégrer le bouton trophée
-10. intégrer le bouton paresseux
-11. intégrer le feedback de réussite
-12. intégrer les petits feux d'artifice lorsqu'un puzzle est réussi
-13. tester l'expérience mobile
-14. ne pas créer de doublons de fonctionnalités communes
+Elles ne sont pas copiées dans chaque cache de jeu.
 
-Ces éléments font partie de l'identité Little Pink Sloth et ne doivent pas être considérés comme des options à demander à l'utilisateur.
-
----
-
-# 16. Principe général
-
-Pour chaque nouveau jeu :
-
-GAMEPLAY = identité propre du jeu
-
-INTERFACE COMMUNE = identité Little Pink Sloth
+Elles sont disponibles via le cache commun / shell géré par le `service-worker.js`.
 
 Exemple :
 
+```text
+Sudoku
+   │
+   ├── games/sudoku/index.html
+   ├── games/sudoku/js/main.js
+   │
+   └── ../../common/ui/game-shell.js
+                         │
+                         ▼
+                  cache commun
+```
+
+Si Sudoku est installé puis lancé hors ligne, `game-shell.js` doit toujours être accessible depuis le cache commun.
+
+## Ressource commune obligatoire
+
+Toute ressource de `common/` réellement utilisée par un jeu doit être incluse dans les ressources précachées du shell.
+
+Il est interdit de compter sur un téléchargement réseau ultérieur pour une ressource commune nécessaire au fonctionnement offline.
+
+---
+
+# 6. Évolution de `common/`
+
+Le cache commun est versionné.
+
+Exemple :
+
+```js
+const LAUNCHER_CACHE = "LPS_LAUNCHER_V2";
+```
+
+Lorsqu'une ressource de `common/` est ajoutée ou modifiée :
+
+1. mettre à jour la liste des ressources du shell ;
+2. incrémenter la version du cache shell ;
+3. publier le nouveau service worker ;
+4. vérifier que les jeux utilisant cette ressource fonctionnent toujours.
+
+### Compatibilité
+
+Une modification de `common/` qui change le comportement attendu ou le contrat d'un jeu doit également entraîner une augmentation de version de ce jeu.
+
+Règle pratique :
+
+```text
+Modification interne compatible de common/
+        ↓
+nouvelle version du cache commun
+
+Modification de common/ qui nécessite une adaptation d'un jeu
+        ↓
+nouvelle version du cache commun
++
+nouvelle version des jeux concernés
+```
+
+Un jeu ne doit jamais être laissé avec une combinaison `jeu + common` incompatible.
+
+---
+
+# 7. Structure d'un jeu
+
+Structure recommandée :
+
+```text
+games/<id>/
+├── index.html
+├── game.json
+├── css/
+├── js/
+├── assets/
+│   ├── images/
+│   └── icons/
+└── fonts/
+```
+
+La structure peut être adaptée si le jeu possède des besoins particuliers.
+
+Cependant :
+
+* `index.html` doit normalement rester à la racine du jeu ;
+* `game.json` doit normalement rester à la racine du jeu ;
+* CSS dans `css/` ;
+* JavaScript dans `js/` ;
+* images dans `assets/images/` ;
+* icônes dans `assets/icons/` ;
+* polices dans `fonts/`.
+
+Les autres fichiers à la racine du jeu doivent avoir une justification technique réelle.
+
+---
+
+# 8. `config/games.json`
+
+Le launcher découvre les jeux grâce à :
+
+```text
+config/games.json
+```
+
+Chaque entrée doit posséder au minimum :
+
+* un `id` stable ;
+* un nom ;
+* une description ;
+* une version ;
+* le dossier du jeu ;
+* la page d'entrée ;
+* l'icône.
+
+Exemple conceptuel :
+
+```json
+{
+  "id": "sudoku",
+  "name": "Sudoku",
+  "description": "Jeu de sudoku",
+  "version": "1.0.0",
+  "path": "games/sudoku/",
+  "entry": "index.html",
+  "icon": "assets/icons/icon.png"
+}
+```
+
+L'ID d'un jeu ne doit pas changer après publication.
+
+---
+
+# 9. `game.json`
+
+Chaque jeu possède :
+
+```text
+games/<id>/game.json
+```
+
+Exemple :
+
+```json
+{
+  "id": "sudoku",
+  "name": "Sudoku",
+  "version": "1.0.0",
+  "description": "Jeu de sudoku",
+  "icon": "assets/icons/icon.png",
+  "files": [
+    "index.html",
+    "game.json",
+    "css/style.css",
+    "js/main.js",
+    "js/game.js",
+    "assets/icons/icon.png"
+  ]
+}
+```
+
+## `files`
+
+`files` doit être une liste exhaustive des ressources statiques propres au jeu nécessaires à son fonctionnement offline.
+
+Elle doit notamment contenir :
+
+* HTML ;
+* JSON ;
+* JavaScript ;
+* CSS ;
+* images ;
+* icônes ;
+* sons ;
+* polices ;
+* Workers ;
+* autres ressources statiques ;
+* dépendances propres au jeu.
+
+Les ressources de `common/` ne sont pas copiées dans cette liste comme ressources du jeu.
+
+Elles sont gérées par le cache commun.
+
+Les chemins doivent correspondre exactement à l'arborescence réelle.
+
+---
+
+# 10. Launcher
+
+Le launcher est accessible depuis :
+
+```text
+index.html
+```
+
+Le code principal se trouve dans :
+
+```text
+launcher/launcher.js
+```
+
+Il :
+
+* lit `config/games.json` ;
+* affiche les jeux disponibles ;
+* détecte les jeux installés ;
+* vérifie les versions distantes lorsque le réseau est disponible ;
+* propose l'installation ;
+* propose les mises à jour ;
+* lance les jeux ;
+* permet le retour au launcher.
+
+Les jeux ne doivent pas importer directement les fichiers internes du launcher.
+
+Ils utilisent uniquement les mécanismes de navigation prévus.
+
+---
+
+# 11. Navigation
+
+Les jeux sont ouverts dans le même contexte que le launcher.
+
+Chaque jeu doit fournir un moyen explicite de revenir au launcher.
+
+Le bouton commun 🦥 doit revenir au launcher.
+
+Le bouton retour du navigateur doit également rester cohérent avec cette navigation.
+
+Les chemins doivent être relatifs.
+
+Interdit :
+
+```text
+/games/sudoku/index.html
+```
+
+Préférer les chemins relatifs adaptés au contexte.
+
+---
+
+# 12. Service Worker
+
+Il n'existe qu'un seul service worker :
+
+```text
+service-worker.js
+```
+
+Il se trouve à la racine du projet.
+
+Il contrôle le launcher et les ressources de l'application.
+
+Les jeux ne possèdent pas leur propre service worker.
+
+## Rôle du service worker
+
+Il gère notamment :
+
+* le cache du launcher ;
+* le cache commun ;
+* les caches versionnés des jeux ;
+* le fonctionnement offline ;
+* les mises à jour ;
+* le nettoyage des anciennes versions.
+
+Le service worker ne doit pas mettre automatiquement en cache toutes les requêtes Internet.
+
+---
+
+# 13. Caches
+
+Convention :
+
+```text
+LPS_LAUNCHER_V1
+LPS_GAME_<id>_<version>
+LPS_GAME_STATE_V1
+```
+
+Le cache launcher contient notamment :
+
+* launcher ;
+* configuration nécessaire ;
+* manifest ;
+* service worker ;
+* ressources communes ;
+* ressources nécessaires au fonctionnement du shell.
+
+Les ressources propres à un jeu sont stockées dans son cache versionné.
+
+Exemple :
+
+```text
+LPS_GAME_SUDOKU_1.0.0
+```
+
+Un jeu ne doit jamais supprimer ou modifier le cache d'un autre jeu.
+
+---
+
+# 14. Installation d'un jeu
+
+Lorsqu'un utilisateur installe un jeu :
+
+1. récupérer `game.json` ;
+2. lire `files` ;
+3. télécharger chaque ressource nécessaire ;
+4. vérifier que les réponses sont valides ;
+5. créer le cache correspondant à la version ;
+6. terminer complètement le cache ;
+7. seulement ensuite déclarer cette version comme active ;
+8. enregistrer l'installation dans IndexedDB.
+
+Si une étape échoue :
+
+* ne pas déclarer la version comme active ;
+* supprimer le cache incomplet ;
+* conserver l'ancienne version fonctionnelle s'il en existe une ;
+* indiquer que la connexion est nécessaire pour terminer l'installation.
+
+---
+
+# 15. Mise à jour d'un jeu
+
+Lorsqu'un jeu installé est utilisé avec une connexion :
+
+1. récupérer la version distante de `game.json` avec contournement du cache ;
+2. comparer les versions `major.minor.patch` ;
+3. si la version distante est supérieure, proposer la mise à jour ;
+4. télécharger toutes les ressources de la nouvelle version ;
+5. créer le nouveau cache ;
+6. vérifier que le téléchargement est complet ;
+7. changer la version active ;
+8. mettre à jour IndexedDB ;
+9. supprimer les anciennes versions du même jeu.
+
+Ne jamais supprimer l'ancienne version avant que la nouvelle soit entièrement valide.
+
+Ne jamais modifier les caches des autres jeux.
+
+---
+
+# 16. Versionnement
+
+Lorsqu'un fichier propre à un jeu est modifié :
+
+```text
+games/<id>/...
+```
+
+augmenter la version du jeu dans :
+
+```text
+games/<id>/game.json
+config/games.json
+```
+
+Les deux versions doivent rester cohérentes.
+
+Lorsqu'un fichier de `common/` est modifié :
+
+* augmenter la version du cache commun / shell ;
+* vérifier les jeux concernés ;
+* augmenter la version d'un jeu si son contrat avec `common/` a changé.
+
+Lorsqu'un fichier du launcher est modifié :
+
+* augmenter la version du cache launcher ;
+* permettre au nouveau service worker de précacher le nouveau shell avant remplacement.
+
+---
+
+# 17. Fonctionnement offline
+
+Après une première visite :
+
+* le launcher doit pouvoir être affiché hors ligne ;
+* les ressources communes nécessaires doivent être disponibles hors ligne ;
+* les jeux installés doivent pouvoir démarrer hors ligne ;
+* les ressources propres d'un jeu doivent provenir de son cache versionné ;
+* les ressources `common/` doivent provenir du cache commun.
+
+Un jeu non installé nécessite une connexion pour être installé.
+
+Aucune ressource indispensable au fonctionnement d'un jeu installé ne doit dépendre d'un téléchargement Internet au moment du lancement.
+
+---
+
+# 18. Workers et génération lourde
+
+Un Web Worker doit être utilisé lorsqu'une opération de génération ou de résolution est suffisamment coûteuse pour provoquer un blocage perceptible de l'interface.
+
+Ne pas utiliser de Worker uniquement par principe.
+
+Structure recommandée pour un jeu nécessitant un générateur lourd :
+
+```text
+games/<id>/js/
+├── main.js
+├── game.js
+├── ui.js
+├── generator.js
+├── solver.js
+├── levelManager.js
+└── generator.worker.js
+```
+
+## `generator.js`
+
+Contient la logique de génération.
+
+Il doit :
+
+* être indépendant du DOM ;
+* ne pas dépendre de l'interface ;
+* pouvoir être exécuté dans un Worker ;
+* retourner des données sérialisables.
+
+## `solver.js`
+
+Contient les algorithmes de résolution.
+
+Il doit :
+
+* être indépendant du DOM ;
+* ne pas manipuler directement l'interface ;
+* pouvoir être utilisé par le générateur ou le Worker.
+
+## `generator.worker.js`
+
+Le Worker sert de passerelle.
+
+Il :
+
+1. reçoit une demande ;
+2. appelle le générateur ;
+3. retourne le résultat ;
+4. ne modifie jamais directement l'état de la partie.
+
+Protocole recommandé :
+
+```js
+{
+  type: "generate",
+  requestId,
+  levelNumber
+}
+```
+
+Réponse :
+
+```js
+{
+  type: "generated",
+  requestId,
+  levelNumber,
+  level
+}
+```
+
+Erreur :
+
+```js
+{
+  type: "error",
+  requestId,
+  levelNumber,
+  error: {
+    message,
+    stack
+  }
+}
+```
+
+## `levelManager.js`
+
+Gère :
+
+* création du Worker ;
+* demandes de génération ;
+* identifiants de requête ;
+* réponses ;
+* erreurs ;
+* niveaux en attente ;
+* préchargement éventuel du niveau suivant.
+
+Lorsque les niveaux sont indépendants, un niveau peut être généré à l'avance pendant que le joueur joue au précédent.
+
+Si le joueur termine avant que le Worker ait terminé :
+
+* attendre le résultat ;
+* ne pas relancer la génération lourde sur le thread principal.
+
+Le premier niveau peut être généré sur le thread principal s'il est suffisamment léger.
+
+---
+
+# 19. Gameplay et thread principal
+
+Le thread principal gère :
+
+* affichage ;
+* interactions ;
+* sélection ;
+* déplacements ;
+* état courant de la partie ;
+* score ;
+* progression ;
+* victoire / défaite ;
+* animations ;
+* interface.
+
+Éviter d'appeler un solveur complet à chaque interaction si une vérification locale suffit.
+
+Les calculs réellement lourds peuvent être déplacés dans un Worker.
+
+---
+
+# 20. Dépendances des Workers
+
+Tous les fichiers nécessaires à un Worker doivent être disponibles offline.
+
+Cela comprend :
+
+* le fichier Worker ;
+* ses imports directs ;
+* les imports indirects nécessaires ;
+* les données statiques utilisées ;
+* les autres ressources nécessaires.
+
+Les ressources propres au Worker doivent être déclarées dans :
+
+```text
+game.json
+```
+
+Exemple :
+
+```js
+new Worker("./js/generator.worker.js", {
+  type: "module"
+});
+```
+
+Les chemins doivent fonctionner :
+
+* sur GitHub Pages ;
+* sous le chemin du repository ;
+* hors ligne.
+
+---
+
+# 21. Interface commune Little Pink Sloth
+
+Tous les nouveaux jeux doivent respecter une identité visuelle commune.
+
+Objectif :
+
+> Les jeux peuvent avoir leur propre personnalité, mais doivent clairement appartenir à la même collection.
+
+Référence principale actuelle :
+
+```text
 Dino Logic
-→ gameplay dinosaures
-→ interface Little Pink Sloth
+```
+
+Avant de créer un nouveau jeu, examiner l'implémentation actuelle de Dino Logic et les composants présents dans `common/`.
+
+Réutiliser les mécanismes existants plutôt que les recréer.
+
+---
+
+# 22. Structure d'interface commune
+
+Disposition générale :
+
+```text
+┌───────────────────────────────┐
+│ 🦥                         ❔ │
+│                            🏆 │
+│                               │
+│          GAME CONTENT         │
+│                               │
+└───────────────────────────────┘
+```
+
+## Bouton 🦥
+
+Toujours présent en haut à gauche.
+
+Il :
+
+* retourne au launcher ;
+* utilise le composant / asset commun ;
+* possède une zone tactile suffisante ;
+* conserve une position cohérente entre les jeux.
+
+## Bouton `?`
+
+Toujours présent en haut à droite.
+
+Il donne accès aux règles du jeu.
+
+Sur desktop :
+
+* un survol peut afficher une courte information ;
+* un clic doit permettre d'accéder aux règles complètes.
+
+Sur mobile :
+
+* ne jamais dépendre uniquement du hover ;
+* un tap doit ouvrir les règles.
+
+Les règles peuvent être affichées dans :
+
+* un panneau ;
+* une modale ;
+* un popover.
+
+Ne pas créer une nouvelle page uniquement pour les règles sans nécessité technique.
+
+## Bouton trophée
+
+Situé sous le bouton `?`.
+
+Il affiche la progression du joueur.
+
+Les statistiques doivent être persistantes localement et fonctionner hors ligne.
+
+---
+
+# 23. Statistiques
+
+Chaque jeu définit les statistiques réellement pertinentes.
+
+Exemples :
+
+* puzzles résolus ;
+* puzzles résolus par difficulté ;
+* parties jouées ;
+* série actuelle ;
+* meilleur temps ;
+* temps moyen ;
+* taux de réussite ;
+* progression par mode.
+
+Ne pas ajouter des statistiques uniquement pour remplir l'écran.
+
+Exemple Sudoku :
+
+```text
+Puzzles résolus : 42
+
+Facile   : 18
+Moyen    : 15
+Difficile: 9
+```
+
+D'autres statistiques peuvent être ajoutées si elles apportent réellement quelque chose au jeu.
+
+La persistance se fait localement :
+
+* `localStorage` ;
+* ou IndexedDB ;
+
+selon l'infrastructure commune disponible.
+
+Aucun compte serveur n'est nécessaire.
+
+---
+
+# 24. Feedback de réussite
+
+Lorsqu'un puzzle est réellement réussi :
+
+* afficher une petite animation de feu d'artifice ;
+* rester léger ;
+* ne pas bloquer le joueur ;
+* être adapté aux petits écrans.
+
+L'animation ne doit jamais être déclenchée simplement parce que la grille est remplie.
+
+Elle doit être déclenchée uniquement après validation réelle de la solution.
+
+La logique commune doit utiliser :
+
+```text
+common/ui/success-animation.js
+```
+
+lorsque cette fonctionnalité est disponible.
+
+---
+
+# 25. Responsive / mobile-first
+
+Les jeux sont principalement destinés au téléphone.
+
+Priorités :
+
+1. gameplay ;
+2. lisibilité ;
+3. ergonomie tactile ;
+4. identité visuelle.
+
+Tous les jeux doivent fonctionner correctement :
+
+* en portrait ;
+* sur petits écrans ;
+* sans scroll horizontal ;
+* sans zoom obligatoire ;
+* avec des boutons suffisamment grands ;
+* avec du texte lisible ;
+* avec une utilisation à un doigt lorsque le gameplay le permet.
+
+Une interaction essentielle ne doit jamais dépendre uniquement du hover.
+
+---
+
+# 26. Identité visuelle
+
+Chaque jeu peut avoir :
+
+* ses propres couleurs ;
+* ses illustrations ;
+* ses animations ;
+* son ambiance ;
+* ses éléments graphiques ;
+* ses mécaniques de gameplay.
+
+En revanche, les éléments suivants doivent rester cohérents :
+
+* navigation ;
+* bouton launcher ;
+* aide ;
+* trophée ;
+* statistiques ;
+* ergonomie mobile ;
+* feedback de réussite ;
+* structure générale du shell.
+
+Principe :
+
+```text
+Gameplay = identité du jeu
+
+Interface commune = identité Little Pink Sloth
+```
+
+---
+
+# 27. Création d'un nouveau jeu
+
+Pour créer un nouveau jeu :
+
+### Étape 1
+
+Créer le dossier :
+
+```text
+games/<id>/
+```
+
+et son arborescence avant de créer les fichiers.
+
+### Étape 2
+
+Créer au minimum :
+
+```text
+games/<id>/
+├── index.html
+├── game.json
+├── css/
+├── js/
+└── assets/
+```
+
+Ajouter les autres dossiers uniquement si nécessaires.
+
+### Étape 3
+
+Créer le gameplay dans les fichiers propres au jeu.
+
+### Étape 4
+
+Identifier les fonctionnalités communes nécessaires.
+
+Avant de créer une fonctionnalité :
+
+```text
+common/
+```
+
+doit être vérifié.
+
+Si une fonctionnalité existe déjà :
+
+```text
+réutiliser
+```
+
+et non :
+
+```text
+copier
+```
+
+### Étape 5
+
+Importer directement les composants communs nécessaires.
+
+Exemple :
+
+```js
+import { createGameShell } from "../../common/ui/game-shell.js";
+```
+
+### Étape 6
+
+Ajouter toutes les ressources propres du jeu à :
+
+```text
+game.json
+```
+
+### Étape 7
+
+Ajouter le jeu à :
+
+```text
+config/games.json
+```
+
+### Étape 8
+
+Tester :
+
+* GitHub Pages ;
+* chemin avec sous-répertoire ;
+* installation ;
+* lancement ;
+* retour au launcher ;
+* bouton `?` ;
+* bouton trophée ;
+* statistiques ;
+* réussite ;
+* animation ;
+* fonctionnement offline ;
+* fonctionnement des Workers s'il y en a ;
+* comportement mobile.
+
+---
+
+# 28. Ce qu'un nouveau jeu ne doit jamais faire
+
+Un nouveau jeu ne doit jamais :
+
+* créer un `manifest.json` ;
+* créer un `service-worker.js` ;
+* devenir une PWA indépendante ;
+* importer un autre jeu ;
+* copier des fichiers de `common/` ;
+* dépendre d'une ressource réseau pour fonctionner offline ;
+* utiliser des chemins absolus supposant que le site est à la racine du domaine ;
+* modifier les fichiers internes d'un autre jeu ;
+* supprimer le cache d'un autre jeu ;
+* modifier les statistiques d'un autre jeu ;
+* créer une deuxième implémentation d'un composant commun existant.
+
+---
+
+# 29. Règles absolues de dépendance
+
+Ces règles doivent être considérées comme des contraintes d'architecture.
+
+```text
+┌──────────────────────────────────────────────┐
+│ RÈGLE 1                                      │
+│ Un jeu PEUT importer common/.                │
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│ RÈGLE 2                                      │
+│ Un jeu NE PEUT JAMAIS importer un autre jeu.│
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│ RÈGLE 3                                      │
+│ Toute ressource common/ utilisée par un jeu  │
+│ DOIT être disponible offline via le cache    │
+│ commun.                                      │
+└──────────────────────────────────────────────┘
+```
+
+Exemples :
+
+```text
+Sudoku
+  ├── common/           → AUTORISÉ
+  ├── launcher/         → via navigation prévue uniquement
+  └── dino_logic/       → INTERDIT
+```
+
+```text
+Dino Logic
+  ├── common/           → AUTORISÉ
+  ├── sudoku/           → INTERDIT
+  └── water_puzzle/     → INTERDIT
+```
+
+---
+
+# 30. GitHub Pages
+
+GitHub Pages est un hébergement statique.
+
+Il n'y a pas :
+
+* de backend applicatif ;
+* de téléchargement différentiel garanti ;
+* de stockage serveur des parties ;
+* de garantie que les caches du navigateur seront conservés indéfiniment.
+
+Les chemins doivent donc être relatifs.
+
+Ne jamais écrire :
+
+```text
+/games/sudoku/
+```
+
+si cela suppose que le repository est installé à la racine du domaine.
+
+Ne jamais dépendre d'une URL externe pour les ressources indispensables au fonctionnement offline.
+
+Le service worker reste à la racine afin de contrôler l'ensemble de l'application.
+
+---
+
+# 31. Stockage
+
+Les données du launcher sont stockées dans IndexedDB :
+
+```text
+little-pink-sloth
+```
+
+via :
+
+```text
+launcher/storage.js
+```
+
+Les informations peuvent notamment contenir :
+
+* jeux installés ;
+* version active ;
+* métadonnées d'installation.
+
+Les données propres aux jeux restent isolées.
+
+Exemple :
+
+```text
+Dino Logic
+└── localStorage propre au jeu
 
 Sudoku
-→ gameplay Sudoku
-→ interface Little Pink Sloth
+└── statistiques / progression propres au jeu
+```
 
-Water Puzzle
-→ gameplay Water Puzzle
-→ interface Little Pink Sloth
+Un jeu ne doit pas modifier directement les données internes d'un autre jeu.
 
-1080
-→ gameplay 1080
-→ interface Little Pink Sloth
+Les données utilisateur doivent rester fonctionnelles hors ligne.
 
-Les jeux doivent être différents dans leur contenu mais immédiatement reconnaissables comme appartenant à la même collection.
+---
+
+# 32. Vérifications avant publication
+
+Avant de considérer un jeu comme terminé, vérifier :
+
+### Architecture
+
+* [ ] Le jeu est dans `games/<id>/`.
+* [ ] L'ID est stable.
+* [ ] Le jeu n'importe aucun autre jeu.
+* [ ] Les fonctionnalités communes utilisent `common/`.
+* [ ] Aucun fichier de `common/` n'a été copié dans le jeu.
+
+### Ressources
+
+* [ ] `game.json` existe.
+* [ ] `game.json.files` contient toutes les ressources propres nécessaires.
+* [ ] Les chemins correspondent exactement aux fichiers.
+* [ ] Les Workers et leurs dépendances sont déclarés.
+* [ ] Les ressources communes utilisées sont précachées par le cache commun.
+
+### Launcher
+
+* [ ] `config/games.json` contient le jeu.
+* [ ] La version est cohérente.
+* [ ] Le jeu peut être installé.
+* [ ] Le jeu peut être lancé.
+* [ ] Le retour au launcher fonctionne.
+
+### Offline
+
+* [ ] Le jeu démarre hors ligne après installation.
+* [ ] Les ressources propres sont disponibles.
+* [ ] Les ressources `common/` sont disponibles.
+* [ ] Les statistiques fonctionnent hors ligne.
+* [ ] Les Workers fonctionnent hors ligne.
+
+### Interface
+
+* [ ] Bouton 🦥 présent.
+* [ ] Bouton `?` présent.
+* [ ] Trophée présent.
+* [ ] Règles accessibles sur mobile.
+* [ ] Statistiques persistantes.
+* [ ] Feedback de réussite présent.
+* [ ] Aucun scroll horizontal.
+* [ ] Interface utilisable sur petit écran.
+* [ ] Aucune interaction essentielle dépend du hover.
+
+### Publication
+
+* [ ] Version du jeu incrémentée si nécessaire.
+* [ ] Version du launcher incrémentée si nécessaire.
+* [ ] Version du cache commun incrémentée si `common/` a changé.
+* [ ] Anciennes versions conservées jusqu'à validation de la nouvelle.
+* [ ] Aucun cache d'un autre jeu n'est supprimé ou modifié.
+
+---
+
+# 33. Règle de priorité pour un agent de développement
+
+Avant toute modification ou création de jeu :
+
+1. Lire `ARCHITECTURE.md`.
+2. Inspecter la structure de `common/`.
+3. Inspecter Dino Logic comme référence actuelle.
+4. Vérifier si la fonctionnalité demandée existe déjà dans `common/`.
+5. Réutiliser `common/` plutôt que copier du code.
+6. Vérifier qu'aucune dépendance vers un autre jeu n'est créée.
+7. Vérifier que toutes les ressources nécessaires fonctionneront offline.
+8. Respecter les conventions de navigation et d'interface.
+9. Tester les chemins sous GitHub Pages.
+10. Tester le fonctionnement offline.
+
+Ne jamais résoudre un problème local en cassant l'isolation entre les jeux.
+
+---
+
+# 34. Résumé architectural
+
+```text
+                    Little Pink Sloth
+                           │
+             ┌─────────────┴─────────────┐
+             │                           │
+          launcher                    common/
+             │                           │
+             │              ┌────────────┼────────────┐
+             │              │            │            │
+             │             UI         storage       styles
+             │
+             ▼
+        config/games.json
+             │
+      ┌──────┼──────────┬──────────┐
+      ▼      ▼          ▼          ▼
+    Dino   Sudoku   Water Puzzle   1080
+    Logic
+      │      │          │          │
+      └──────┴──────────┴──────────┘
+                     │
+              chacun peut importer
+                     │
+                     ▼
+                  common/
+
+Mais :
+
+Dino Logic ──X──> Sudoku
+Sudoku ──────X──> Dino Logic
+Sudoku ──────X──> Water Puzzle
+```
+
+## Règle fondamentale
+
+**Les jeux sont indépendants entre eux, mais partagent directement l'infrastructure de `common/`.**
+
+```text
+JEU
+ ├── gameplay propre
+ ├── ressources propres
+ ├── état propre
+ └── peut importer common/
+                     │
+                     ▼
+              infrastructure
+                 partagée
+```
+
+`common/` est donc une **dépendance partagée**, pas une bibliothèque copiée dans chaque jeu.
+
+Toute ressource commune utilisée doit rester disponible offline via le cache commun.
+
+
