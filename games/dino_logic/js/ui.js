@@ -335,7 +335,7 @@ import {
 
                 while (!meetsDifficulty) {
                     const size =
-                        Math.floor(Math.random() * 4) + 4;
+                        Math.floor(Math.random() * 4) + 5;
 
                     await newPuzzle(size);
 
@@ -716,7 +716,7 @@ import {
 
     function getRandomRushSize() {
 
-        return Math.floor(Math.random() * 4) + 4;
+        return Math.floor(Math.random() * 4) + 5;
     }
 
 

@@ -1,4 +1,3 @@
-
 /*
  * ============================================================
  * SOLVEUR
@@ -8,87 +7,20 @@
  *
  * Règles :
  *
- * - exactement un chat par ligne
- * - exactement un chat par colonne
- * - exactement un chat par zone
- * - aucun chat adjacent, diagonales comprises
+ * - exactement un dino par ligne
+ * - exactement un dino par colonne
+ * - exactement un dino par zone
+ * - aucun dino adjacent, diagonales comprises
  *
  * Le solveur peut s'arrêter après 2 solutions.
  *
- * Cela permet de répondre à la question :
- *
- *     "Ce puzzle possède-t-il une solution unique ?"
- *
  * ============================================================
  */
-
-
-/*
- * ============================================================
- * VOISINS
- * ============================================================
- */
-
-function getNeighbors(index, size) {
-
-    const row = Math.floor(index / size);
-
-    const column = index % size;
-
-    const neighbors = [];
-
-
-    for (let dr = -1; dr <= 1; dr++) {
-
-        for (let dc = -1; dc <= 1; dc++) {
-
-            if (dr === 0 && dc === 0) {
-                continue;
-            }
-
-
-            const r = row + dr;
-
-            const c = column + dc;
-
-
-            if (
-                r >= 0 &&
-                r < size &&
-                c >= 0 &&
-                c < size
-            ) {
-
-                neighbors.push(
-                    r * size + c
-                );
-            }
-        }
-    }
-
-
-    return neighbors;
-}
 
 
 /*
  * ============================================================
  * COMPTER LES SOLUTIONS
- * ============================================================
- *
- * Retourne :
- *
- * {
- *     count: nombre de solutions trouvées,
- *     nodes: nombre de recherches effectuées
- * }
- *
- * maxSolutions permet de s'arrêter rapidement.
- *
- * Pour vérifier l'unicité :
- *
- *     maxSolutions = 2
- *
  * ============================================================
  */
 
@@ -98,43 +30,40 @@ export function countSolutions(
     maxSolutions = 2
 ) {
 
-    const cellCount =
-        size * size;
-
-
     /*
-     * Une solution sera représentée par :
+     * solution[row] = colonne du dino.
      *
-     * solution[row] = column
+     * -1 = ligne non encore affectée.
      */
-
     const solution =
-        new Array(size).fill(-1);
+        new Int16Array(size);
+
+    solution.fill(-1);
 
 
     /*
-     * Colonnes déjà utilisées.
+     * Colonnes et zones utilisées.
+     *
+     * 0 = libre
+     * 1 = utilisée
      */
-
     const usedColumns =
-        new Set();
-
-
-    /*
-     * Zones déjà utilisées.
-     */
+        new Uint8Array(size);
 
     const usedZones =
-        new Set();
+        new Uint8Array(size);
 
 
     /*
-     * Cases contenant déjà un chat.
+     * Lignes encore disponibles.
      */
+    const activeRows =
+        new Uint8Array(size);
 
-    const placedCells =
-        new Set();
+    activeRows.fill(1);
 
+
+    let rowsLeft = size;
 
     let solutionCount = 0;
 
@@ -143,57 +72,98 @@ export function countSolutions(
 
     /*
      * ----------------------------------------------------------
-     * Vérifie si une case peut recevoir un chat.
+     * Vérifie si une case peut recevoir un dino.
      * ----------------------------------------------------------
+     *
+     * Comme une solution possède exactement un dino
+     * par ligne, une case ne peut être adjacente
+     * qu'au dino de la ligne précédente ou suivante.
+     *
+     * Il n'est donc plus nécessaire de parcourir
+     * les 8 voisins de la cellule.
      */
 
-    function canPlace(index) {
+    function canPlace(
+        row,
+        column
+    ) {
 
-        const column =
-            index % size;
+        /*
+         * Une seule case par colonne.
+         */
+        if (
+            usedColumns[column]
+        ) {
+
+            return false;
+        }
+
+
+        const index =
+            row * size + column;
+
 
         const zone =
             zones[index];
 
 
         /*
-         * Une seule case par colonne.
-         */
-
-        if (
-            usedColumns.has(column)
-        ) {
-            return false;
-        }
-
-
-        /*
          * Une seule case par zone.
          */
-
         if (
-            usedZones.has(zone)
+            usedZones[zone]
         ) {
+
             return false;
         }
 
 
         /*
-         * Pas de voisin.
+         * Ligne précédente.
          */
-
-        const neighbors =
-            getNeighbors(index, size);
-
-
-        for (
-            const neighbor
-            of neighbors
+        if (
+            row > 0
         ) {
 
+            const previousColumn =
+                solution[row - 1];
+
+
             if (
-                placedCells.has(neighbor)
+                previousColumn !== -1 &&
+                Math.abs(
+                    previousColumn -
+                    column
+                ) <= 1
             ) {
+
+                return false;
+            }
+        }
+
+
+        /*
+         * Ligne suivante.
+         *
+         * Le MRV peut avoir rempli cette ligne
+         * avant la ligne courante.
+         */
+        if (
+            row + 1 < size
+        ) {
+
+            const nextColumn =
+                solution[row + 1];
+
+
+            if (
+                nextColumn !== -1 &&
+                Math.abs(
+                    nextColumn -
+                    column
+                ) <= 1
+            ) {
+
                 return false;
             }
         }
@@ -205,52 +175,17 @@ export function countSolutions(
 
     /*
      * ----------------------------------------------------------
-     * Trouve les candidats d'une ligne.
+     * Recherche récursive avec MRV.
      * ----------------------------------------------------------
      */
 
-    function getCandidates(row) {
-
-        const candidates = [];
-
-
-        for (
-            let column = 0;
-            column < size;
-            column++
-        ) {
-
-            const index =
-                row * size + column;
-
-
-            if (
-                canPlace(index)
-            ) {
-
-                candidates.push(index);
-            }
-        }
-
-
-        return candidates;
-    }
-
-
-    /*
-     * ----------------------------------------------------------
-     * Recherche récursive.
-     * ----------------------------------------------------------
-     */
-
-    function search(rowsLeft) {
+    function search() {
 
         /*
-         * On a trouvé une solution.
+         * Toutes les lignes sont remplies.
          */
-
         if (
-            rowsLeft.length === 0
+            rowsLeft === 0
         ) {
 
             solutionCount++;
@@ -260,10 +195,8 @@ export function countSolutions(
 
 
         /*
-         * Arrêt dès qu'on connaît suffisamment
-         * de solutions.
+         * Deux solutions suffisent.
          */
-
         if (
             solutionCount >= maxSolutions
         ) {
@@ -274,35 +207,66 @@ export function countSolutions(
 
         /*
          * ------------------------------------------------------
-         * MRV :
+         * MRV
          *
-         * On choisit la ligne ayant le moins de possibilités.
-         *
-         * Cela réduit énormément la recherche.
+         * Chercher la ligne ayant le moins de possibilités.
          * ------------------------------------------------------
          */
 
         let selectedRow = -1;
 
-        let selectedCandidates = null;
+        let selectedCount =
+            size + 1;
+
+        let selectedColumns = [];
 
 
         for (
-            const row
-            of rowsLeft
+            let row = 0;
+            row < size;
+            row++
         ) {
 
-            const candidates =
-                getCandidates(row);
+            if (
+                !activeRows[row]
+            ) {
+
+                continue;
+            }
+
+
+            const candidates = [];
+
+
+            for (
+                let column = 0;
+                column < size;
+                column++
+            ) {
+
+                if (
+                    canPlace(
+                        row,
+                        column
+                    )
+                ) {
+
+                    candidates.push(
+                        column
+                    );
+                }
+            }
+
+            const count =
+                candidates.length;
 
 
             /*
-             * Une ligne sans possibilité signifie
-             * qu'il n'y a pas de solution dans cette branche.
+             * Une ligne sans possibilité
+             * rend la branche impossible.
              */
-
             if (
-                candidates.length === 0
+                count === 0
             ) {
 
                 return;
@@ -310,35 +274,52 @@ export function countSolutions(
 
 
             if (
-                selectedCandidates === null ||
-                candidates.length <
-                selectedCandidates.length
+                count < selectedCount
             ) {
 
-                selectedRow = row;
+                selectedCount =
+                    count;
 
-                selectedCandidates =
+                selectedRow =
+                    row;
+
+                selectedColumns =
                     candidates;
+
+
+                /*
+                 * On ne peut pas faire mieux
+                 * que 1 candidat.
+                 */
+                if (
+                    count === 1
+                ) {
+
+                    break;
+                }
             }
         }
 
 
         /*
          * ------------------------------------------------------
-         * Tester chaque candidat.
+         * Tester les candidats.
          * ------------------------------------------------------
          */
 
         for (
-            const index
-            of selectedCandidates
+            const column
+            of selectedColumns
         ) {
+
 
             nodes++;
 
 
-            const column =
-                index % size;
+            const index =
+                selectedRow * size +
+                column;
+
 
             const zone =
                 zones[index];
@@ -348,47 +329,51 @@ export function countSolutions(
              * Placement.
              */
 
-            placedCells.add(index);
-
-            usedColumns.add(column);
-
-            usedZones.add(zone);
-
             solution[selectedRow] =
                 column;
 
+            activeRows[selectedRow] =
+                0;
+
+            rowsLeft--;
+
+
+            usedColumns[column] =
+                1;
+
+            usedZones[zone] =
+                1;
+
 
             /*
-             * Nouvelle liste de lignes.
+             * Recherche suivante.
              */
 
-            const nextRows =
-                rowsLeft.filter(
-                    row =>
-                        row !== selectedRow
-                );
-
-
-            search(nextRows);
+            search();
 
 
             /*
-             * Annulation du placement.
+             * Annulation.
              */
 
-            placedCells.delete(index);
+            usedColumns[column] =
+                0;
 
-            usedColumns.delete(column);
+            usedZones[zone] =
+                0;
 
-            usedZones.delete(zone);
 
-            solution[selectedRow] = -1;
+            rowsLeft++;
+
+            activeRows[selectedRow] =
+                1;
+
+            solution[selectedRow] =
+                -1;
 
 
             /*
-             * Deux solutions suffisent
-             * pour savoir que le puzzle n'est
-             * pas unique.
+             * Deux solutions suffisent.
              */
 
             if (
@@ -402,17 +387,10 @@ export function countSolutions(
 
 
     /*
-     * Toutes les lignes doivent être remplies.
+     * Lancer la recherche.
      */
 
-    const rows =
-        Array.from(
-            { length: size },
-            (_, index) => index
-        );
-
-
-    search(rows);
+    search();
 
 
     return {
@@ -443,4 +421,3 @@ export function hasUniqueSolution(
 
     return result.count === 1;
 }
-

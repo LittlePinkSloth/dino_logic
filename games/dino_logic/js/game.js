@@ -1,4 +1,4 @@
-import { generatePuzzle } from "./generator.js";
+import { requestPuzzle } from "./levelManager.js";
 
 /*
 
@@ -45,7 +45,7 @@ size = DEFAULT_SIZE
 
 
 currentPuzzle =
-    await generatePuzzle(size);
+    await requestPuzzle(size);
 
 
 const cellCount =
@@ -644,7 +644,7 @@ size = DEFAULT_SIZE
 
 
 currentPuzzle =
-    await generatePuzzle(size);
+    await requestPuzzle(size);
 
 
 const cellCount =
