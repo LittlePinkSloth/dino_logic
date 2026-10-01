@@ -1,7 +1,7 @@
 {
   "id": "sudoku",
   "name": "Sudoku",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Grilles de logique classiques en 9 x 9",
   "icon": "assets/icon.png",
   "files": [
