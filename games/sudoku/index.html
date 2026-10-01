@@ -13,12 +13,13 @@
 <body>
     <main class="sudoku-app">
         <header class="game-header">
-            <span aria-hidden="true"></span>
+            
+            <span id="current-level" class="level-badge">Facile</span>
             <div class="title-wrap">
                 <p class="eyebrow">LITTLE PINK SLOTH</p>
                 <h1>Sudoku</h1>
             </div>
-            <span id="current-level" class="level-badge">Facile</span>
+            <span aria-hidden="true"></span>
         </header>
 
         <section class="play-area" aria-label="Partie de Sudoku">
@@ -36,6 +37,7 @@
                     <button class="number-key" type="button" data-value="8" aria-label="Saisir 8">8</button>
                     <button class="number-key" type="button" data-value="9" aria-label="Saisir 9">9</button>
                     <button id="erase" class="erase-key" type="button" aria-label="Effacer la case sélectionnée">Effacer</button>
+                    <button id="notes-toggle" class="notes-key" type="button" aria-label="Activer ou désactiver les notes" aria-pressed="false">Notes</button>
                 </div>
             </div>
 

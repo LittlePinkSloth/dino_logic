@@ -32,11 +32,13 @@ const checkButton = document.querySelector("#check-grid");
 const difficultyButtons = [...document.querySelectorAll("[data-difficulty]")];
 const numberButtons = [...document.querySelectorAll("[data-value]")];
 const eraseButton = document.querySelector("#erase");
+const notesButton = document.querySelector("#notes-toggle");
 const cells = [];
 
 let puzzle = null;
 let solution = null;
 let current = null;
+let notes = null;
 let currentDifficulty = "easy";
 let selectedDifficulty = "easy";
 let puzzleCompleted = false;
@@ -44,6 +46,11 @@ let selectedCell = 40;
 let validation = null;
 let generating = false;
 let activeWorker = null;
+let notesMode = false;
+
+function createEmptyNotes() {
+    return Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => []));
+}
 
 const gameShell = initGameShell({
     statisticsLabel: "Afficher la progression",
@@ -63,6 +70,15 @@ function hasGridValues(grid) {
     return Array.isArray(grid) && grid.length === SIZE && grid.every(row =>
         Array.isArray(row) && row.length === SIZE && row.every(value =>
             Number.isInteger(value) && value >= 0 && value <= SIZE
+        )
+    );
+}
+
+function hasValidNotes(value) {
+    return Array.isArray(value) && value.length === SIZE && value.every(row =>
+        Array.isArray(row) && row.length === SIZE && row.every(cellNotes =>
+            Array.isArray(cellNotes) && cellNotes.every(note => Number.isInteger(note) && note >= 1 && note <= SIZE) &&
+            new Set(cellNotes).size === cellNotes.length
         )
     );
 }
@@ -92,6 +108,7 @@ function saveGame() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({
             puzzle,
             current,
+            notes,
             solution,
             currentDifficulty,
             selectedDifficulty,
@@ -104,6 +121,7 @@ function saveGame() {
 
 function validSavedGame(saved) {
     if (!saved || !isValidGrid(saved.puzzle) || !hasGridValues(saved.current) ||
+        (saved.notes !== undefined && !hasValidNotes(saved.notes)) ||
         !isValidGrid(saved.solution) || !Object.hasOwn(LEVEL_NAMES, saved.currentDifficulty) ||
         !Object.hasOwn(LEVEL_NAMES, saved.selectedDifficulty)) return false;
     if (saved.solution.some(row => row.some(value => value === 0))) return false;
@@ -123,6 +141,7 @@ function loadGame() {
         if (!validSavedGame(saved)) return false;
         puzzle = saved.puzzle;
         current = saved.current;
+        notes = saved.notes || createEmptyNotes();
         solution = saved.solution;
         currentDifficulty = saved.currentDifficulty;
         selectedDifficulty = saved.selectedDifficulty;
@@ -138,7 +157,8 @@ function cellText(index) {
     const column = index % SIZE;
     const value = current[row][column];
     const label = value ? `, ${value}` : ", vide";
-    return `Ligne ${row + 1}, colonne ${column + 1}${label}${puzzle[row][column] ? ", chiffre initial" : ""}`;
+    const annotations = notes[row][column].length ? `, notes ${notes[row][column].join(" ")}` : "";
+    return `Ligne ${row + 1}, colonne ${column + 1}${label}${annotations}${puzzle[row][column] ? ", chiffre initial" : ""}`;
 }
 
 function render() {
@@ -151,9 +171,29 @@ function render() {
         const column = index % SIZE;
         const value = current[row][column];
         const given = puzzle[row][column] !== 0;
+        const cellNotes = notes[row][column];
         const related = row === selectedRow || column === selectedColumn ||
             (Math.floor(row / 3) === Math.floor(selectedRow / 3) && Math.floor(column / 3) === Math.floor(selectedColumn / 3));
-        cell.textContent = value ? String(value) : "";
+        cell.replaceChildren();
+        if (cellNotes.length) {
+            const noteGrid = document.createElement("span");
+            noteGrid.className = "cell-notes";
+            noteGrid.setAttribute("aria-hidden", "true");
+            for (let note = 1; note <= SIZE; note++) {
+                const noteElement = document.createElement("span");
+                noteElement.className = "cell-note";
+                noteElement.textContent = cellNotes.includes(note) ? String(note) : "";
+                noteElement.classList.toggle("matching-note", Boolean(selectedValue && note === selectedValue && cellNotes.includes(note)));
+                noteGrid.append(noteElement);
+            }
+            cell.append(noteGrid);
+        }
+        if (value) {
+            const valueElement = document.createElement("span");
+            valueElement.className = "cell-value";
+            valueElement.textContent = String(value);
+            cell.append(valueElement);
+        }
         cell.disabled = generating;
         cell.tabIndex = index === selectedCell ? 0 : -1;
         cell.setAttribute("aria-label", cellText(index));
@@ -173,8 +213,15 @@ function render() {
         button.setAttribute("aria-pressed", String(button.dataset.difficulty === selectedDifficulty));
         button.disabled = generating;
     });
-    numberButtons.forEach(button => { button.disabled = generating; });
+    numberButtons.forEach(button => {
+        button.disabled = generating;
+        const number = Number(button.dataset.value);
+        const count = current.flat().filter(value => value === number).length;
+        button.classList.toggle("already-used", count >= SIZE);
+    });
     eraseButton.disabled = generating;
+    notesButton.disabled = generating;
+    notesButton.setAttribute("aria-pressed", String(notesMode));
     newButton.disabled = generating;
     checkButton.disabled = generating;
 }
@@ -215,6 +262,17 @@ function enterValue(value) {
     if (generating || !puzzle) return;
     const row = Math.floor(selectedCell / SIZE);
     const column = selectedCell % SIZE;
+    if (notesMode && value !== 0) {
+        const cellNotes = notes[row][column];
+        const existingIndex = cellNotes.indexOf(value);
+        if (existingIndex === -1) cellNotes.push(value);
+        else cellNotes.splice(existingIndex, 1);
+        cellNotes.sort((left, right) => left - right);
+        saveGame();
+        render();
+        setStatus("");
+        return;
+    }
     if (puzzle[row][column]) return;
     current[row][column] = value;
     validation = null;
@@ -222,6 +280,18 @@ function enterValue(value) {
     render();
     setStatus("");
     if (current.every(line => line.every(Boolean))) evaluateGrid();
+}
+
+function eraseSelectedCell() {
+    if (generating || !puzzle) return;
+    const row = Math.floor(selectedCell / SIZE);
+    const column = selectedCell % SIZE;
+    notes[row][column] = [];
+    if (!puzzle[row][column]) current[row][column] = 0;
+    validation = null;
+    saveGame();
+    render();
+    setStatus("");
 }
 
 function createPuzzle(difficulty) {
@@ -265,6 +335,7 @@ async function startNewGame() {
         }
         puzzle = game.puzzle;
         current = game.puzzle.map(row => row.slice());
+        notes = createEmptyNotes();
         solution = game.solution;
         currentDifficulty = game.difficulty;
         puzzleCompleted = false;
@@ -285,7 +356,11 @@ document.querySelector(".number-pad").addEventListener("click", event => {
     if (button) enterValue(Number(button.dataset.value));
 });
 
-eraseButton.addEventListener("click", () => enterValue(0));
+eraseButton.addEventListener("click", eraseSelectedCell);
+notesButton.addEventListener("click", () => {
+    notesMode = !notesMode;
+    render();
+});
 checkButton.addEventListener("click", evaluateGrid);
 newButton.addEventListener("click", startNewGame);
 difficultyButtons.forEach(button => button.addEventListener("click", () => {
@@ -300,7 +375,7 @@ difficultyButtons.forEach(button => button.addEventListener("click", () => {
 document.addEventListener("keydown", event => {
     if (!puzzle || generating || event.altKey || event.ctrlKey || event.metaKey) return;
     if (/^[1-9]$/.test(event.key)) enterValue(Number(event.key));
-    else if (event.key === "Backspace" || event.key === "Delete") enterValue(0);
+    else if (event.key === "Backspace" || event.key === "Delete") eraseSelectedCell();
     else if (event.key.startsWith("Arrow")) {
         event.preventDefault();
         const movement = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -SIZE, ArrowDown: SIZE }[event.key];
@@ -315,6 +390,7 @@ if (loadGame()) {
     evaluateGrid();
 } else {
     current = Array.from({ length: SIZE }, () => Array(SIZE).fill(0));
+    notes = createEmptyNotes();
     puzzle = current.map(row => row.slice());
     solution = puzzle.map(row => row.slice());
     render();
