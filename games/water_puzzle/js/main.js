@@ -28,12 +28,12 @@ const STATISTICS_KEY = "waterPuzzleProgress";
  * ============================================================
  * ÉTAT DU JEU
  * ============================================================
- */
+ 
 
 
 
-let currentLevelNumber = loadProgress().currentLevel;
-
+let currentLevelNumber = loadProgress().currentLevel;*/
+let currentLevelNumber = 15;
 
 /*
  * ============================================================

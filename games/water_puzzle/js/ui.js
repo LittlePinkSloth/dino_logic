@@ -18,8 +18,6 @@ import {
 
 
 let boardElement;
-let statusElement;
-let levelElement;
 let specialLegendElement;
 
 let nextLevelButton;
@@ -47,15 +45,24 @@ export function initUI(nextLevelCallback) {
     boardElement =
         document.getElementById("board");
 
-    statusElement =
-        document.getElementById("status");
-
     specialLegendElement =
         document.getElementById("special-legend");
 
+    /*
+     * Les anciens éléments de niveau/statut peuvent encore
+     * exister dans le HTML. On les supprime complètement
+     * plutôt que de simplement les masquer.
+     */
+    document
+        .querySelector(".level-info")
+        ?.remove();
+
+    document
+        .getElementById("status")
+        ?.remove();
+
     if (
         !boardElement ||
-        !statusElement ||
         !specialLegendElement
     ) {
         throw new Error(
@@ -76,19 +83,12 @@ export function initUI(nextLevelCallback) {
             "La fiole de pierre ne peut pas servir de fiole source."
         ],
         getStatistics: () => [
-            { label: "Niveaux terminés", value: progress.completedLevels }
+            {
+                label: "Niveaux terminés",
+                value: progress.completedLevels
+            }
         ]
     });
-
-    levelElement =
-        document.createElement("p");
-
-    levelElement.className =
-        "level-info";
-
-    statusElement.before(
-        levelElement
-    );
 
     nextLevelButton =
         document.createElement("button");
@@ -143,22 +143,11 @@ export function initUI(nextLevelCallback) {
         handleBoardClick
     );
 
-
     /*
-     * ========================================================
-     * SYNCHRONISATION AVEC LE WORKER
-     * ========================================================
-     *
      * La vérification de solvabilité est asynchrone.
-     *
      * Lorsque le Worker détermine qu'une partie est perdue,
-     * game.js notifie l'UI ici afin de mettre à jour :
-     *
-     * - le message "Perdu"
-     * - le bouton "Recommencer"
-     * - l'état visuel du plateau
+     * le board est simplement marqué visuellement comme perdu.
      */
-
     onGameStateChange(
         () => {
             render();
@@ -398,34 +387,13 @@ export function render() {
 
     trackLevelCompletion(state);
 
-    renderLevelInfo(state);
-
     renderBoard(state);
-
-    renderStatus(state);
 
     renderNextLevelButton(state);
 
     renderRestartButton(state);
 }
 
-
-/*
- * ============================================================
- * INFORMATIONS DU NIVEAU
- * ============================================================
- */
-
-function renderLevelInfo(state) {
-
-    const difficulty =
-        capitalize(
-            state.level.difficulty
-        );
-
-    levelElement.textContent =
-        `Niveau ${state.level.number} · ${difficulty}`;
-}
 
 
 /*
@@ -438,6 +406,11 @@ function renderBoard(state) {
 
     boardElement.innerHTML = "";
     boardElement.dataset.tubeCount = state.tubeInfo.length;
+
+    boardElement.classList.toggle(
+        "is-lost",
+        state.lost
+    );
 
     state.tubeInfo.forEach(
         (tube, index) => {
@@ -703,53 +676,6 @@ function getColorName(color) {
 }
 
 
-/*
- * ============================================================
- * STATUT
- * ============================================================
- */
-
-function renderStatus(state) {
-
-    statusElement.classList.remove(
-        "success"
-    );
-
-    statusElement.classList.remove(
-        "failure"
-    );
-
-    if (
-        state.solved
-    ) {
-
-        statusElement.textContent =
-            `Niveau terminé en ${state.moves} coups !`;
-
-        statusElement.classList.add(
-            "success"
-        );
-
-        return;
-    }
-
-    if (
-        state.lost
-    ) {
-
-        statusElement.textContent =
-            "Perdu";
-
-        statusElement.classList.add(
-            "failure"
-        );
-
-        return;
-    }
-
-    statusElement.textContent =
-        `Coups : ${state.moves}`;
-}
 
 
 /*
@@ -810,17 +736,6 @@ function renderRestartButton(state) {
  * ============================================================
  */
 
-function capitalize(text) {
-
-    if (!text) {
-        return "";
-    }
-
-    return (
-        text.charAt(0).toUpperCase() +
-        text.slice(1)
-    );
-}
 
 
 function trackLevelCompletion(state) {
