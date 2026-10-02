@@ -1,0 +1,1253 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #f3f4f8;
+
+    font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: #252a38;
+}
+
+.app {
+    width: min(94vw, 700px);
+
+    padding: 24px 16px;
+}
+
+h1 {
+    margin: 0 0 4px;
+
+    text-align: center;
+
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.level-info {
+    margin: 0 0 4px;
+
+    text-align: center;
+
+    color: #687083;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status {
+    min-height: 24px;
+
+    margin: 0 0 24px;
+
+    text-align: center;
+
+    color: #687083;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.status.success {
+    color: #4d9b59;
+}
+
+.status.failure {
+    color: #d45b5b;
+}
+
+/*
+ * ============================================================
+ * PLATEAU
+ * ============================================================
+ */
+
+.board {
+    display: flex;
+
+    justify-content: center;
+    align-items: flex-end;
+
+    gap: 18px;
+
+    flex-wrap: wrap;
+}
+
+/*
+ * ============================================================
+ * FIOLE DE BASE
+ * ============================================================
+ */
+
+.tube {
+    position: relative;
+
+    width: 64px;
+    height: 220px;
+
+    padding: 8px 6px;
+
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+
+    border: 3px solid #555;
+    border-top: none;
+
+    border-radius: 0 0 28px 28px;
+
+    background: rgba(255, 255, 255, 0.55);
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease,
+        background 0.15s ease;
+}
+
+.tube:hover {
+    transform: translateY(-4px);
+
+    border-color: #444;
+}
+
+.tube:active {
+    transform: translateY(-2px);
+}
+
+.tube.selected {
+    transform: translateY(-10px);
+
+    border-color: #5b61e8;
+
+    box-shadow:
+        0 0 0 4px rgba(91, 97, 232, 0.18),
+        0 8px 18px rgba(91, 97, 232, 0.15);
+}
+
+.tube.selected:hover {
+    transform: translateY(-12px);
+}
+
+.tube.empty {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/*
+ * ============================================================
+ * FIOLE EN PIERRE
+ * ============================================================
+ */
+
+.tube-stone {
+    border-color: #777;
+
+    background:
+        linear-gradient(
+            135deg,
+            #d1d1d1,
+            #a9a9a9
+        );
+
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.2),
+        inset 0 0 18px rgba(0, 0, 0, 0.12);
+}
+
+.tube-stone:hover {
+    transform: translateY(-4px);
+
+    border-color: #666;
+}
+
+.tube-stone:active {
+    transform: translateY(-2px);
+}
+
+.tube-stone.empty {
+    background:
+        linear-gradient(
+            135deg,
+            #d1d1d1,
+            #a9a9a9
+        );
+}
+
+/*
+ * ============================================================
+ * FIOLE GELÉE
+ * ============================================================
+ */
+
+.tube-frozen {
+    border-color: #8eb5d1;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(220, 242, 255, 0.82),
+            rgba(170, 210, 235, 0.72)
+        );
+
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.55),
+        inset 0 0 16px rgba(255, 255, 255, 0.55);
+}
+
+.tube-frozen::before {
+    content: "";
+
+    position: absolute;
+
+    top: 5px;
+    left: 7px;
+    right: 7px;
+
+    height: 18px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.45);
+
+    pointer-events: none;
+}
+
+.tube-frozen:hover {
+    border-color: #729fbe;
+}
+
+/*
+ * ============================================================
+ * FIOLE CACHÉE
+ * ============================================================
+ */
+
+ .tube-hidden {
+    border-color: #5e267e;
+
+    background:
+        linear-gradient(
+            135deg,
+            #c8c5cd,
+            #b380b9
+        );
+
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.3),
+        inset 0 0 18px rgba(0, 0, 0, 0.14);
+}
+
+.tube-hidden:hover {
+    border-color: #666b76;
+}
+
+/*
+ * Étiquette indiquant la couleur à trier pour débloquer
+ * la fiole.
+ */
+
+ .hidden-target-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 46px;
+    min-height: 46px;
+    padding: 6px 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 3px solid rgba(255, 255, 255, 0.72);
+    border-radius: 50%;
+
+    box-shadow:
+        0 2px 6px rgba(37, 42, 56, 0.18),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    text-align: center;
+
+    pointer-events: none;
+    z-index: 2;
+
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+/* Couleurs des étiquettes */
+
+.hidden-target-label[data-color="red"] {
+    background-color: #ef6461;
+    color: #fff;
+}
+
+.hidden-target-label[data-color="blue"] {
+    background-color: #5b8def;
+    color: #fff;
+}
+
+.hidden-target-label[data-color="green"] {
+    background-color: #61b56b;
+    color: #fff;
+}
+
+.hidden-target-label[data-color="yellow"] {
+    background-color: #f2c94c;
+    color: #4a3000;
+    text-shadow: none;
+}
+
+.hidden-target-label[data-color="purple"] {
+    background-color: #8f63c2;
+    color: #fff;
+}
+
+.hidden-target-label[data-color="orange"] {
+    background-color: #ee9650;
+    color: #4a3000;
+    text-shadow: none;
+}
+
+.tube-hidden:hover .hidden-target-label {
+    transform: translate(-50%, -50%) scale(1.05);
+}
+
+.tube-hidden.selected .hidden-target-label {
+    box-shadow:
+        0 0 0 3px rgba(91, 97, 232, 0.2),
+        0 3px 8px rgba(37, 42, 56, 0.2),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+@media (max-width: 500px) {
+    .hidden-target-label {
+        width: 40px;
+        min-height: 40px;
+        font-size: 7px;
+    }
+}
+
+.tube-hidden:hover .hidden-target-label {
+    transform:
+        translate(-50%, -50%)
+        scale(1.05);
+}
+
+.tube-hidden.selected .hidden-target-label {
+    box-shadow:
+        0 0 0 3px rgba(91, 97, 232, 0.2),
+        0 3px 8px rgba(37, 42, 56, 0.2),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+
+/*
+ * Contraste adapté aux couleurs claires.
+ */
+
+.hidden-target-label[data-color="yellow"],
+.hidden-target-label[data-color="orange"] {
+    color: #4a3000;
+
+    text-shadow: none;
+}
+
+
+/*
+ * Couleur violette légèrement plus claire pour conserver
+ * une bonne lisibilité du texte.
+ */
+
+.hidden-target-label[data-color="purple"] {
+    background-color: #8f63c2;
+}
+
+
+/*
+ * Sur mobile, l'étiquette reste suffisamment compacte
+ * pour ne pas empiéter sur les parois de la fiole.
+ */
+
+@media (max-width: 500px) {
+
+    .hidden-target-label {
+        width: 40px;
+        min-height: 40px;
+
+        font-size: 7px;
+    }
+}
+
+/*
+ * ============================================================
+ * ANIMATIONS DE DÉBLOCAGE
+ * ============================================================
+ *
+ * À ajouter à la fin de ton style.css existant.
+ *
+ * Ces animations sont volontairement courtes et légères.
+ */
+
+/*
+ * FIOLE GELÉE
+ * Petit éclat avec quatre particules qui s'écartent.
+ */
+
+ .tube-unlock-frozen {
+    animation:
+        tube-unlock-frozen 620ms ease-out both;
+}
+
+@keyframes tube-unlock-frozen {
+
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow:
+            0 0 0 0 rgba(190, 235, 255, 0);
+    }
+
+    35% {
+        transform: scale(1.035);
+        filter: brightness(1.16);
+        box-shadow:
+            0 0 0 5px rgba(205, 241, 255, 0.34),
+            0 0 14px rgba(175, 225, 255, 0.55);
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow:
+            0 0 0 0 rgba(190, 235, 255, 0);
+    }
+}
+
+.unlock-effect {
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    width: 5px;
+    height: 5px;
+
+    border-radius: 50%;
+
+    pointer-events: none;
+
+    z-index: 4;
+}
+
+.unlock-effect-frozen {
+    background: rgba(255, 255, 255, 0.95);
+
+    box-shadow:
+        -18px -10px 0 0 rgba(235, 250, 255, 0.95),
+        18px -8px 0 0 rgba(210, 242, 255, 0.95),
+        -15px 13px 0 0 rgba(220, 246, 255, 0.9),
+        16px 14px 0 0 rgba(245, 252, 255, 0.95);
+
+    opacity: 0;
+
+    animation:
+        frozen-shard-burst 620ms ease-out both;
+}
+
+@keyframes frozen-shard-burst {
+
+    0% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            scale(0.25);
+    }
+
+    18% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            scale(0.8);
+    }
+}
+
+/*
+ * FIOLE CACHÉE
+ * Petite impulsion lumineuse violette accompagnée
+ * de particules claires.
+ */
+
+.tube-unlock-hidden {
+    animation:
+        tube-unlock-hidden 620ms ease-out both;
+}
+
+@keyframes tube-unlock-hidden {
+
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow:
+            0 0 0 0 rgba(190, 125, 255, 0);
+    }
+
+    35% {
+        transform: scale(1.035);
+        filter: brightness(1.14);
+        box-shadow:
+            0 0 0 5px rgba(205, 145, 255, 0.28),
+            0 0 16px rgba(190, 110, 255, 0.58);
+    }
+
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+        box-shadow:
+            0 0 0 0 rgba(190, 125, 255, 0);
+    }
+}
+
+.unlock-effect-hidden {
+    background: rgba(255, 255, 255, 0.95);
+
+    box-shadow:
+        -17px -12px 0 0 rgba(231, 190, 255, 0.95),
+        16px -13px 0 0 rgba(255, 235, 255, 0.95),
+        -16px 12px 0 0 rgba(215, 165, 255, 0.9),
+        17px 13px 0 0 rgba(247, 220, 255, 0.95);
+
+    opacity: 0;
+
+    animation:
+        hidden-light-burst 620ms ease-out both;
+}
+
+@keyframes hidden-light-burst {
+
+    0% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            scale(0.2);
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+        transform:
+            translate(-50%, -50%)
+            scale(0.95);
+    }
+}
+
+/*
+ * Respect de la préférence système d'animation réduite.
+ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .tube-unlock-frozen,
+    .tube-unlock-hidden,
+    .unlock-effect-frozen,
+    .unlock-effect-hidden {
+        animation: none;
+    }
+}
+
+
+/*
+ * ============================================================
+ * EAU / COULEURS
+ * ============================================================
+ */
+
+.water {
+    width: 100%;
+    height: 25%;
+
+    margin-top: 2px;
+
+    border-radius: 8px;
+
+    flex-shrink: 0;
+
+    transition:
+        opacity 0.15s ease;
+}
+
+/*
+ * ============================================================
+ * BOUTON NIVEAU SUIVANT
+ * ============================================================
+ */
+
+.next-level-button {
+    display: block;
+
+    margin: 24px auto 0;
+
+    padding: 10px 18px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #5b61e8;
+
+    color: white;
+
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.next-level-button:hover {
+    transform: translateY(-2px);
+
+    background: #4f55d5;
+
+    box-shadow:
+        0 4px 10px rgba(91, 97, 232, 0.2);
+}
+
+.next-level-button:active {
+    transform: translateY(0);
+
+    box-shadow: none;
+}
+
+/*
+ * ============================================================
+ * BOUTON RECOMMENCER
+ * ============================================================
+ */
+
+.restart-button {
+    display: block;
+
+    margin: 12px auto 0;
+
+    padding: 10px 18px;
+
+    border: 1px solid #d0d3dc;
+    border-radius: 8px;
+
+    background: white;
+
+    color: #252a38;
+
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.restart-button:hover {
+    transform: translateY(-2px);
+
+    background: #f7f7fa;
+
+    box-shadow:
+        0 4px 10px rgba(37, 42, 56, 0.12);
+}
+
+.restart-button:active {
+    transform: translateY(0);
+
+    box-shadow: none;
+}
+
+/*
+ * ============================================================
+ * FOCUS CLAVIER
+ * ============================================================
+ */
+
+.tube:focus-visible,
+.next-level-button:focus-visible,
+.restart-button:focus-visible {
+    outline: 3px solid #8b90f5;
+    outline-offset: 3px;
+}
+
+/*
+ * ============================================================
+ * MOBILE
+ * ============================================================
+ */
+
+@media (max-width: 500px) {
+
+    body {
+        align-items: flex-start;
+    }
+
+    .app {
+        width: 100%;
+
+        padding:
+            24px 10px 32px;
+    }
+
+    h1 {
+        font-size: 26px;
+    }
+
+    .status {
+        margin-bottom: 20px;
+    }
+
+    .board {
+        gap: 12px;
+    }
+
+    .tube {
+        width: 56px;
+        height: 190px;
+
+        padding: 7px 5px;
+
+        border-width: 3px;
+
+        border-radius:
+            0 0 24px 24px;
+    }
+
+    .tube.selected {
+        transform: translateY(-8px);
+    }
+
+    .tube.selected:hover {
+        transform: translateY(-10px);
+    }
+
+    .water {
+        border-radius: 7px;
+    }
+
+    .next-level-button {
+        margin-top: 20px;
+
+        padding:
+            10px 16px;
+    }
+
+    .restart-button {
+        margin-top: 10px;
+
+        padding:
+            10px 16px;
+    }
+}
+
+@media (max-width: 360px) {
+
+    .app {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .board {
+        gap: 9px;
+    }
+
+    .tube {
+        width: 52px;
+        height: 175px;
+    }
+}
+
+
+/* Little Pink Sloth presentation */
+
+:root {
+    --lps-ink: #263b38;
+    --lps-muted: #657c75;
+    --lps-paper: #f3f6eb;
+    --lps-mint: #dcefe1;
+    --lps-green: #337b5b;
+    --lps-coral: #d95f57;
+    --lps-line: #c8d8ca;
+}
+
+body {
+    min-height: 100vh;
+    display: block;
+    padding: 0 16px;
+    background-color: var(--lps-paper);
+    background-image:
+        linear-gradient(rgba(51, 123, 91, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(51, 123, 91, 0.035) 1px, transparent 1px),
+        linear-gradient(135deg, #f6f4e8, #e8f3e9 58%, #edf3f4);
+    background-size: 28px 28px, 28px 28px, 100% 100%;
+    color: var(--lps-ink);
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+.app {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: clamp(72px, 11vh, 108px) 12px 52px;
+}
+
+.game-heading {
+    margin-bottom: 22px;
+    text-align: center;
+}
+
+.eyebrow {
+    margin: 0 0 5px;
+    color: var(--lps-green);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+h1 {
+    margin: 0;
+    color: var(--lps-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 40px;
+    font-weight: 700;
+}
+
+.level-info {
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 9px;
+    padding: 7px 14px;
+    border: 1px solid var(--lps-line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--lps-green);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.status {
+    width: fit-content;
+    min-height: 0;
+    margin: 0 auto 24px;
+    padding: 7px 15px;
+    border: 1px solid rgba(101, 124, 117, 0.2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.64);
+    color: var(--lps-muted);
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.status.success {
+    border-color: #a4d0ad;
+    background: #e0f3e3;
+    color: #246b47;
+}
+
+.status.failure {
+    border-color: #e5a7a0;
+    background: #fff0ec;
+    color: #a7433c;
+}
+
+.board {
+    width: min(100%, 900px);
+    min-height: 280px;
+    margin: 0 auto;
+    padding: 28px 18px;
+    gap: clamp(8px, 1.6vw, 18px);
+    border: 1px solid #c4d7c8;
+    border-radius: 22px;
+    background-color: rgba(255, 255, 255, 0.54);
+    background-image:
+        repeating-linear-gradient(135deg, rgba(51, 123, 91, 0.035) 0 1px, transparent 1px 12px),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.88), rgba(224, 241, 226, 0.84));
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.92),
+        0 16px 34px rgba(46, 85, 65, 0.1);
+}
+
+.tube {
+    width: 68px;
+    height: 236px;
+    padding: 9px 6px 8px;
+    overflow: visible;
+    border: 3px solid #62766f;
+    border-top: 0;
+    border-radius: 0 0 28px 28px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.34) 48%, rgba(255, 255, 255, 0.68));
+    box-shadow:
+        inset 5px 0 9px rgba(255, 255, 255, 0.62),
+        inset -5px 0 9px rgba(57, 82, 71, 0.08),
+        0 5px 8px rgba(46, 73, 58, 0.1);
+}
+
+.tube::after {
+    position: absolute;
+    top: -4px;
+    left: -3px;
+    width: calc(100% + 6px);
+    height: 11px;
+    border: 3px solid #62766f;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.82);
+    content: "";
+    pointer-events: none;
+}
+
+.tube:hover {
+    transform: translateY(-5px);
+    border-color: var(--lps-green);
+}
+
+.tube.selected,
+.tube.selected:hover {
+    transform: translateY(-10px);
+    border-color: var(--lps-coral);
+    box-shadow:
+        0 0 0 4px rgba(217, 95, 87, 0.18),
+        0 12px 20px rgba(63, 81, 65, 0.16);
+}
+
+.tube.selected::after {
+    border-color: var(--lps-coral);
+}
+
+.tube.empty {
+    background: rgba(255, 255, 255, 0.36);
+}
+
+.tube-stone,
+.tube-stone.empty {
+    border-color: #727c77;
+    background: repeating-linear-gradient(145deg, #bfc5c0 0 8px, #aab2ad 8px 15px);
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.34),
+        inset 0 0 15px rgba(34, 48, 42, 0.2),
+        0 5px 8px rgba(46, 73, 58, 0.1);
+}
+
+.tube-stone::after {
+    border-color: #727c77;
+    background: #b9c0bb;
+}
+
+.tube-frozen {
+    border-color: #67a6b5;
+    background: linear-gradient(90deg, rgba(209, 241, 244, 0.88), rgba(164, 220, 229, 0.6) 50%, rgba(222, 248, 246, 0.9));
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.72),
+        inset 0 0 18px rgba(93, 183, 198, 0.24),
+        0 5px 8px rgba(46, 73, 58, 0.1);
+}
+
+.tube-frozen::after {
+    border-color: #67a6b5;
+}
+
+.tube-hidden {
+    border-color: #8c6594;
+    background: linear-gradient(145deg, rgba(224, 205, 226, 0.94), rgba(157, 127, 166, 0.84));
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.48),
+        inset 0 0 18px rgba(75, 43, 82, 0.2),
+        0 5px 8px rgba(46, 73, 58, 0.1);
+}
+
+.tube-hidden::after {
+    border-color: #8c6594;
+    background: #d7c5db;
+}
+
+.tube-marker {
+    position: absolute;
+    z-index: 4;
+    top: 13px;
+    left: 50%;
+    display: grid;
+    width: 25px;
+    height: 25px;
+    place-items: center;
+    transform: translateX(-50%);
+    border: 1px solid rgba(38, 59, 56, 0.22);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--lps-ink);
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.marker-stone {
+    color: #4d5852;
+}
+
+.marker-frozen {
+    color: #287d8b;
+}
+
+.marker-hidden {
+    color: #704779;
+}
+
+.hidden-target-label {
+    width: 44px;
+    min-height: 44px;
+    border: 2px solid rgba(255, 255, 255, 0.94);
+    box-shadow:
+        0 2px 8px rgba(37, 42, 56, 0.2),
+        0 0 0 4px rgba(255, 255, 255, 0.16);
+    font-size: 8px;
+    letter-spacing: 0;
+}
+
+.water {
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    border-radius: 8px 8px 6px 6px;
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.special-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 16px auto 0;
+    padding: 0;
+    list-style: none;
+}
+
+.special-legend[hidden] {
+    display: none;
+}
+
+.special-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border: 1px solid var(--lps-line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--lps-ink);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.legend-marker {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    background: #edf2e9;
+    font-size: 13px;
+}
+
+.next-level-button {
+    margin-top: 22px;
+    padding: 13px 24px;
+    border: 1px solid #b74c46;
+    border-radius: 999px;
+    background: var(--lps-coral);
+    box-shadow: 0 5px 0 #b74c46, 0 9px 18px rgba(159, 68, 62, 0.18);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.next-level-button:hover {
+    transform: translateY(-2px);
+    background: #c9534d;
+    box-shadow: 0 7px 0 #a84641, 0 12px 20px rgba(159, 68, 62, 0.2);
+}
+
+.next-level-button:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #a84641;
+}
+
+.restart-button {
+    border-color: var(--lps-line);
+    border-radius: 999px;
+    color: var(--lps-ink);
+}
+
+.tube:focus-visible,
+.next-level-button:focus-visible,
+.restart-button:focus-visible {
+    outline: 3px solid #347b5b;
+    outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 0 8px;
+    }
+
+    .app {
+        padding: 72px 0 32px;
+    }
+
+    .game-heading {
+        margin-bottom: 16px;
+    }
+
+    h1 {
+        font-size: 32px;
+    }
+
+    .status {
+        margin-bottom: 16px;
+    }
+
+    .board {
+        min-height: 0;
+        padding: 22px 7px;
+        gap: 12px 6px;
+        border-radius: 16px;
+    }
+
+    .tube {
+        width: min(54px, calc((100vw - 92px) / 6));
+        height: 180px;
+        padding: 7px 4px 6px;
+        border-width: 2px;
+        border-top: 0;
+        border-radius: 0 0 22px 22px;
+    }
+
+    .board[data-tube-count="7"] .tube,
+    .board[data-tube-count="8"] .tube {
+        width: min(42px, calc((100vw - 88px) / 8));
+    }
+
+    .tube::after {
+        top: -3px;
+        left: -2px;
+        width: calc(100% + 4px);
+        height: 9px;
+        border-width: 2px;
+    }
+
+    .tube-marker {
+        top: 10px;
+        width: 21px;
+        height: 21px;
+        font-size: 12px;
+    }
+
+    .hidden-target-label {
+        width: 36px;
+        min-height: 36px;
+        font-size: 7px;
+    }
+
+    .water {
+        border-radius: 6px 6px 5px 5px;
+    }
+
+    .special-legend {
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .special-legend li {
+        padding: 5px 9px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 360px) {
+    .board {
+        padding-right: 5px;
+        padding-left: 5px;
+        gap: 10px 4px;
+    }
+
+    .tube {
+        height: 164px;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .board:not(.is-ready) .tube {
+        animation: bottle-arrive 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .board:not(.is-ready) .tube:nth-child(2) { animation-delay: 45ms; }
+    .board:not(.is-ready) .tube:nth-child(3) { animation-delay: 90ms; }
+    .board:not(.is-ready) .tube:nth-child(4) { animation-delay: 135ms; }
+    .board:not(.is-ready) .tube:nth-child(5) { animation-delay: 180ms; }
+    .board:not(.is-ready) .tube:nth-child(6) { animation-delay: 225ms; }
+    .board:not(.is-ready) .tube:nth-child(7) { animation-delay: 270ms; }
+    .board:not(.is-ready) .tube:nth-child(8) { animation-delay: 315ms; }
+}
+
+@keyframes bottle-arrive {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

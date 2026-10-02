@@ -476,10 +476,10 @@ function renderBoard(state) {
                 );
             }
 
-            tubeElement.setAttribute(
-                "aria-label",
-                getTubeLabel(tube, index)
-            );
+                tubeElement.setAttribute(
+                    "aria-label",
+                    getTubeLabel(tube, index)
+                );
 
             /*
              * Une fiole hidden conserve son contenu dans
@@ -521,13 +521,14 @@ function renderBoard(state) {
                 );
             }
 
-            /*
-             * Les petits marqueurs ronds précédemment affichés
-             * dans les fioles sont volontairement supprimés.
-             *
-             * Ils étaient susceptibles d'être masqués ou coupés
-             * par les couches d'eau les plus hautes.
-             */
+            const marker = getTubeMarker(tube.type);
+            if (marker) {
+                const markerElement = document.createElement("span");
+                markerElement.className = `tube-marker marker-${tube.type}`;
+                markerElement.textContent = marker;
+                markerElement.setAttribute("aria-hidden", "true");
+                tubeElement.appendChild(markerElement);
+            }
 
             boardElement.appendChild(
                 tubeElement
@@ -548,7 +549,6 @@ function getTubeLabel(tube, index) {
         frozen: "gelée, bloquée",
         hidden: "cachée"
     };
-
     const colors = tube.type === "hidden"
         ? `couleur cible ${getColorName(tube.targetColor)}`
         : tube.layers.length > 0
@@ -576,7 +576,6 @@ function renderSpecialLegend(state) {
             .map(tube => tube.type)
             .filter(type => type !== "normal")
     )];
-
     const labels = {
         stone: "Pierre",
         frozen: "Gelée",
@@ -587,29 +586,12 @@ function renderSpecialLegend(state) {
     specialLegendElement.hidden = specialTypes.length === 0;
 
     for (const type of specialTypes) {
-
-        const item =
-            document.createElement("li");
-
-        const marker =
-            document.createElement("span");
-
-        marker.className =
-            `legend-marker marker-${type}`;
-
-        marker.textContent =
-            getTubeMarker(type);
-
-        marker.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-
-        item.append(
-            marker,
-            document.createTextNode(labels[type])
-        );
-
+        const item = document.createElement("li");
+        const marker = document.createElement("span");
+        marker.className = `legend-marker marker-${type}`;
+        marker.textContent = getTubeMarker(type);
+        marker.setAttribute("aria-hidden", "true");
+        item.append(marker, document.createTextNode(labels[type]));
         specialLegendElement.append(item);
     }
 }
@@ -847,12 +829,11 @@ function loadProgress() {
         STATISTICS_KEY,
         () => ({ completedLevels: 0 }),
         stored => ({
-            currentLevel:
-                Number.isSafeInteger(stored.currentLevel) &&
-                stored.currentLevel > 0
-                    ? stored.currentLevel
-                    : 1,
-
+                currentLevel:
+                    Number.isSafeInteger(stored.currentLevel) &&
+                    stored.currentLevel > 0
+                        ? stored.currentLevel
+                        : 1,
             completedLevels:
                 Number.isSafeInteger(stored.completedLevels) &&
                 stored.completedLevels >= 0
