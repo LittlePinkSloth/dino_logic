@@ -8,7 +8,9 @@ import {
     isValidCell,
     useBonusLife,
     useBonusDino,
-    useBonusMarks
+    useBonusMarks,
+    setSharedLives,
+    resetLives
     } from "./game.js";
 
 import {
@@ -154,7 +156,9 @@ import {
             "🦖 Un dino par zone de couleur.",
             "🦖 Un dino par ligne.",
             "🦖 Un dino par colonne.",
-            "🦖 Deux dinos ne peuvent pas se toucher, même en diagonale."
+            "🦖 Deux dinos ne peuvent pas se toucher, même en diagonale.",
+            "Héroïque : pas de bonus, 3 vies, jusqu'à la défaite.",
+            "Rush : donnes toi à fond pendant 15 minutes."
         ],
         getStatistics: () => [
             { label: "Grille normale", value: progress.classicGridCount },
@@ -191,21 +195,43 @@ import {
 
 
     heroicModeInput.addEventListener(
-        "change",
-        () => {
-            heroicMode = heroicModeInput.checked;
-            if (heroicMode) {
-                rushModeInput.checked = false;
-                rushMode = false;
-                document.body.classList.remove("rush-mode");
-            }
-            document.body.classList.toggle(
-                "heroic-mode",
-                heroicMode
-            );
-            render();
+    "change",
+    async () => {
+        heroicMode = heroicModeInput.checked;
+
+        if (heroicMode) {
+            rushModeInput.checked = false;
+            rushMode = false;
+
+            setSharedLives(true);
+            resetLives();
+
+            document.body.classList.remove("rush-mode");
         }
-    );
+        else {
+            const previousState = getGameState();
+
+            setSharedLives(false);
+
+            if (previousState.gameOver) {
+                resetLives();
+
+                await newPuzzle(
+                    Number(gridSizeElement.value)
+                );
+
+                resetTimer();
+            }
+        }
+
+        document.body.classList.toggle(
+            "heroic-mode",
+            heroicMode
+        );
+
+        render();
+    }
+);
 
 
     rushModeInput.addEventListener(
@@ -281,6 +307,13 @@ import {
             const previousState = getGameState();
 
             if (
+                heroicMode &&
+                previousState.gameOver
+            ) {
+                resetLives();
+                heroicStreak = 0;
+            }
+            else if (
                 heroicMode &&
                 puzzleStarted &&
                 !previousState.solved &&

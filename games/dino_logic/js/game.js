@@ -16,10 +16,13 @@ let marked = [];
 let incorrect = [];
 
 let lives = 3;
+let sharedLives = false;
 
 let history = [];
 
 let timeExpired = false;
+
+
 
 /*
 
@@ -151,6 +154,20 @@ export function getLives() {
 
 return lives;
 
+
+}
+
+/** Vies partagées (pour le mode héroique) */
+export function setSharedLives(enabled) {
+
+    sharedLives = enabled;
+
+}
+/** Reset des vies partagées pour nouvelle partie héroique */
+
+export function resetLives() {
+
+    lives = INITIAL_LIVES;
 
 }
 
@@ -666,9 +683,10 @@ incorrect =
     new Array(cellCount)
         .fill(false);
 
-
-lives =
-    INITIAL_LIVES;
+/** remise à 3 des vies pour les modes rush et normal, vies partagées pour le mode héroique */
+if (!sharedLives) {
+    lives = INITIAL_LIVES;
+}
 
 
 history = [];

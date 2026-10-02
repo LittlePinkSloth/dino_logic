@@ -4,7 +4,7 @@
       "id": "dino_logic",
       "name": "Dino Logic",
       "description": "Un jeu de logique, un jeu de dinos.",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "path": "games/dino_logic/",
       "entry": "games/dino_logic/index.html",
       "icon": "games/dino_logic/assets/icon-192.png"
