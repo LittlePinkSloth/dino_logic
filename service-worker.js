@@ -1,5 +1,5 @@
 
-const LAUNCHER_CACHE = "LPS_LAUNCHER_V6";
+const LAUNCHER_CACHE = "LPS_LAUNCHER_V7";
 const GAME_STATE_CACHE = "LPS_GAME_STATE_V1";
 const ROOT_URL = new URL(self.registration.scope);
 const LAUNCHER_FILES = [

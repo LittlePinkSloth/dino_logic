@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f3f4f8">
+    <meta name="description" content="Triez les couleurs dans les fioles de Water Puzzle.">
+    <title>Water Puzzle · Little Pink Sloth</title>
+    <link rel="icon" href="assets/icons/water-puzzle.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../../common/styles/common.css">
+</head>
+<body>
+    <main class="app">
+        <header class="game-heading">
+            <p class="eyebrow">Atelier des couleurs</p>
+            <h1>Water Puzzle</h1>
+        </header>
+        <section class="play-area" aria-label="Partie de Water Puzzle">
+            <p id="status" class="status" role="status" aria-live="polite">Coups : 0</p>
+            <div id="board" class="board" aria-label="Fioles de couleurs"></div>
+            <ul id="special-legend" class="special-legend" aria-label="Types de fioles spéciales" hidden></ul>
+        </section>
+    </main>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
