@@ -619,6 +619,185 @@ h1 {
     color: #704779;
 }
 
+.special-legend-item {
+    position: relative;
+
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    background: transparent !important;
+}
+
+.legend-trigger {
+    padding: 6px 11px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    border: 1px solid var(--lps-line);
+    border-radius: 999px;
+
+    background: rgba(255, 255, 255, 0.86);
+
+    color: var(--lps-ink);
+
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.legend-tooltip {
+    position: absolute;
+
+    z-index: 5;
+
+    left: 50%;
+    bottom: calc(100% + 8px);
+
+    width: min(280px, calc(100vw - 32px));
+
+    padding: 10px 12px;
+
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+
+    background: #26384d;
+
+    color: #fff;
+
+    box-shadow: 0 8px 22px rgba(28, 43, 58, 0.22);
+
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.45;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transform: translate(-50%, 4px);
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        visibility 0.15s ease;
+}
+
+.special-legend-item:hover .legend-tooltip,
+.special-legend-item:focus-within .legend-tooltip,
+.special-legend-item.is-open .legend-tooltip {
+    opacity: 1;
+    visibility: visible;
+
+    transform: translate(-50%, 0);
+}
+
+
+.game-controls {
+    width: 100%;
+
+    margin: 22px auto 0;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+}
+
+.game-controls .next-level-button,
+.game-controls .restart-button {
+    margin: 0;
+}
+
+.bonus-tube-button {
+    padding: 10px 16px;
+
+    border: 1px solid #537e68;
+    border-radius: 999px;
+
+    background: #638f75;
+
+    color: #fff;
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease;
+}
+
+@media (max-width: 380px) {
+
+    .game-controls {
+        gap: 6px;
+    }
+
+    .game-controls .restart-button,
+    .game-controls .bonus-tube-button {
+        min-height: 44px;
+
+        padding: 8px;
+    }
+
+    .game-controls .restart-button {
+        font-size: 13px;
+    }
+
+    .game-controls .bonus-tube-button {
+        font-size: 12px;
+    }
+}
+
+.bonus-tube-button:hover {
+    transform: translateY(-2px);
+
+    background: #527c63;
+}
+
+.tube.tube-bonus {
+    height: 72px;
+
+    border: 3px solid #638f75;
+    border-radius: 7px 7px 20px 20px;
+
+    background: rgba(235, 248, 239, 0.8);
+}
+
+.tube.tube-bonus::before {
+    position: absolute;
+
+    top: -18px;
+    left: 0;
+
+    width: 100%;
+
+    color: #527c63;
+
+    content: "BONUS";
+
+    font-size: 9px;
+    font-weight: 800;
+
+    text-align: center;
+}
+
+.tube.tube-bonus .water {
+    height: 100%;
+}
+
 
 /*
  * ============================================================
@@ -733,7 +912,9 @@ h1 {
 
 .tube:focus-visible,
 .next-level-button:focus-visible,
-.restart-button:focus-visible {
+.restart-button:focus-visible,
+.bonus-tube-button:focus-visible,
+.legend-trigger:focus-visible {
     outline: 3px solid #4f91ca;
 
     outline-offset: 4px;

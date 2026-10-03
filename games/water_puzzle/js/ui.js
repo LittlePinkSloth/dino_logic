@@ -4,6 +4,7 @@ import {
     getGameState,
     selectTube,
     pourTube,
+    addBonusTube,
     restartGame,
     consumeUnlockedTubes,
     onGameStateChange
@@ -22,6 +23,8 @@ let specialLegendElement;
 
 let nextLevelButton;
 let restartButton;
+let bonusTubeButton;
+let controlsElement;
 
 let onNextLevel = null;
 
@@ -73,14 +76,24 @@ export function initUI(nextLevelCallback) {
     onNextLevel =
         nextLevelCallback;
 
+    controlsElement =
+        document.createElement("div");
+
+    controlsElement.className =
+        "game-controls";
+
+    boardElement.after(
+        controlsElement
+    );
+
     gameShell = initGameShell({
         helpItems: [
             "Touchez une fiole, puis une autre pour y verser la couleur du dessus.",
             "Une fiole ne peut recevoir que la même couleur ou être vide. Le jeu verse autant de couches identiques que possible dans la place disponible.",
+            "Une fiole pleine et monochrome est terminée et ne peut plus être utilisée.",
             "Triez toutes les couleurs pour terminer le niveau.",
-            "La fiole gelée se débloque lorsqu'une fiole voisine est pleine et monochrome.",
-            "La fiole cachée se débloque lorsqu'une fiole pleine et monochrome de sa couleur cible apparaît n'importe où sur le plateau.",
-            "La fiole de pierre ne peut pas servir de fiole source."
+            "Après une défaite, une fiole bonus d'une case peut être ajoutée jusqu'à la victoire.",
+            "Des fioles particulières peuvent apparaître. Leur règle est indiquée dans la légende sous le plateau."
         ],
         getStatistics: () => [
             {
@@ -110,7 +123,7 @@ export function initUI(nextLevelCallback) {
         handleNextLevelClick
     );
 
-    boardElement.after(
+    controlsElement.append(
         nextLevelButton
     );
 
@@ -134,13 +147,56 @@ export function initUI(nextLevelCallback) {
         handleRestartClick
     );
 
-    nextLevelButton.after(
+    controlsElement.append(
         restartButton
+    );
+
+    bonusTubeButton =
+        document.createElement("button");
+
+    bonusTubeButton.type =
+        "button";
+
+    bonusTubeButton.className =
+        "bonus-tube-button";
+
+    bonusTubeButton.textContent =
+        "Ajouter une fiole bonus";
+
+    bonusTubeButton.style.display =
+        "none";
+
+    bonusTubeButton.addEventListener(
+        "click",
+        handleBonusTubeClick
+    );
+
+    controlsElement.append(
+        bonusTubeButton
     );
 
     boardElement.addEventListener(
         "click",
         handleBoardClick
+    );
+
+    specialLegendElement.addEventListener(
+        "click",
+        handleSpecialLegendClick
+    );
+
+    document.addEventListener(
+        "pointerdown",
+        closeSpecialLegendOnOutsideClick
+    );
+
+    document.addEventListener(
+        "keydown",
+        event => {
+            if (event.key === "Escape") {
+                closeSpecialLegendTooltips();
+            }
+        }
     );
 
     /*
@@ -217,6 +273,16 @@ function handleRestartClick() {
     loadingNextLevel = false;
 
     render();
+}
+
+
+function handleBonusTubeClick() {
+
+    if (
+        addBonusTube()
+    ) {
+        render();
+    }
 }
 
 
@@ -431,6 +497,11 @@ function renderBoard(state) {
                 `tube-${tube.type}`
             );
 
+            tubeElement.classList.toggle(
+                "tube-bonus",
+                tube.isBonus === true
+            );
+
             if (
                 state.selectedTube === index
             ) {
@@ -528,7 +599,11 @@ function getTubeLabel(tube, index) {
             ? `couleurs visibles ${[...tube.layers].reverse().map(getColorName).join(", ")}`
             : "vide";
 
-    return `Fiole ${index + 1}, ${typeNames[tube.type] ?? "spéciale"}, ${colors}`;
+    const typeName = tube.isBonus
+        ? "bonus, capacité 1 case"
+        : typeNames[tube.type] ?? "spéciale";
+
+    return `Fiole ${index + 1}, ${typeName}, ${colors}`;
 }
 
 
@@ -556,6 +631,12 @@ function renderSpecialLegend(state) {
         hidden: "Cachée"
     };
 
+    const descriptions = {
+        stone: "Vide au début, une fiole de pierre ne peut jamais servir de source, mais peut recevoir des couleurs.",
+        frozen: "Bloquée comme source et destination jusqu'à ce qu'une fiole pleine et monochrome immédiatement voisine, sur la même rangée, la dégèle.",
+        hidden: "Son contenu est masqué jusqu'à ce qu'une fiole pleine et monochrome de la couleur cible apparaisse sur le plateau."
+    };
+
     specialLegendElement.replaceChildren();
     specialLegendElement.hidden = specialTypes.length === 0;
 
@@ -563,6 +644,36 @@ function renderSpecialLegend(state) {
 
         const item =
             document.createElement("li");
+
+        item.className =
+            "special-legend-item";
+
+        const trigger =
+            document.createElement("button");
+
+        trigger.type =
+            "button";
+
+        trigger.className =
+            "legend-trigger";
+
+        trigger.setAttribute(
+            "aria-label",
+            `${labels[type]} : afficher la règle particulière`
+        );
+
+        trigger.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        const tooltipId =
+            `legend-rule-${type}`;
+
+        trigger.setAttribute(
+            "aria-describedby",
+            tooltipId
+        );
 
         const marker =
             document.createElement("span");
@@ -578,13 +689,95 @@ function renderSpecialLegend(state) {
             "true"
         );
 
-        item.append(
+        const label =
+            document.createElement("span");
+
+        label.textContent =
+            labels[type];
+
+        trigger.append(
             marker,
-            document.createTextNode(labels[type])
+            label
         );
 
-        specialLegendElement.append(item);
+        const tooltip =
+            document.createElement("span");
+
+        tooltip.id =
+            tooltipId;
+
+        tooltip.className =
+            "legend-tooltip";
+
+        tooltip.setAttribute(
+            "role",
+            "tooltip"
+        );
+
+        tooltip.textContent =
+            descriptions[type];
+
+        item.append(
+            trigger,
+            tooltip
+        );
+
+        specialLegendElement.append(
+            item
+        );
     }
+}
+
+
+function handleSpecialLegendClick(event) {
+
+    const trigger =
+        event.target.closest(".legend-trigger");
+
+    if (!trigger) {
+        return;
+    }
+
+    const item =
+        trigger.closest(".special-legend-item");
+
+    const shouldOpen =
+        !item.classList.contains("is-open");
+
+    closeSpecialLegendTooltips();
+
+    item.classList.toggle(
+        "is-open",
+        shouldOpen
+    );
+
+    trigger.setAttribute(
+        "aria-expanded",
+        String(shouldOpen)
+    );
+}
+
+
+function closeSpecialLegendOnOutsideClick(event) {
+
+    if (
+        !specialLegendElement.contains(event.target)
+    ) {
+        closeSpecialLegendTooltips();
+    }
+}
+
+
+function closeSpecialLegendTooltips() {
+
+    specialLegendElement
+        .querySelectorAll(".special-legend-item.is-open")
+        .forEach(item => {
+            item.classList.remove("is-open");
+            item
+                .querySelector(".legend-trigger")
+                ?.setAttribute("aria-expanded", "false");
+        });
 }
 
 
@@ -722,10 +915,16 @@ function renderRestartButton(state) {
         restartButton.style.display =
             "block";
 
+        bonusTubeButton.style.display =
+            "block";
+
         return;
     }
 
     restartButton.style.display =
+        "none";
+
+    bonusTubeButton.style.display =
         "none";
 }
 

@@ -1,6 +1,7 @@
 /* solver.js */
 import {
     areSameRowNeighbors,
+    getTubeCapacity,
     isMonochromeFull,
     isTubeClosed
 } from "./rules.js";
@@ -444,11 +445,17 @@ export function getPossibleMoves(
             const target =
                 tubes[targetIndex];
 
+            const targetCapacity =
+                getTubeCapacity(
+                    target,
+                    capacity
+                );
+
             if (
                 target.type === "frozen" ||
                 target.type === "hidden" ||
                 isTubeClosed(target, capacity) ||
-                target.layers.length >= capacity
+                target.layers.length >= targetCapacity
             ) {
                 continue;
             }
@@ -472,7 +479,7 @@ export function getPossibleMoves(
                 amount:
                     Math.min(
                         blockSize,
-                        capacity -
+                        targetCapacity -
                             target.layers.length
                     )
             });

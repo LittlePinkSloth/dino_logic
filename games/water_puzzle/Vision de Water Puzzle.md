@@ -7,7 +7,11 @@
 * Ajout progressif des mécaniques de jeu et des couleurs au fil des niveaux
 
 # Features à ajouter progressivement au cours du développement du jeu :
-## Règle des fioles monochromes
+## Règles générales et règles particulières
+* L'infobulle en haut à droite "?" ne contient que les règles générales du jeu, et évoque l'existence de mécaniques particulières
+* Lorsqu'une fiole particulière apparaît sur le plateau, son type est signifié en bas du plateau. Un survol ou un clic que ce type ouvre une infobulle spécifique au type considéré
+
+## Règle des fioles monochromes (implémenté)
 * Une fois une fiole terminée (monochrome), la fiole est fermée
 * Une fiole fermée ne peut plus être ni destination ni source
 
@@ -19,6 +23,8 @@
 * Nombre d'ajout maximal : une fiole peut être ajoutée à chaque défaite sans limite de nombre jusqu'à réussite du niveau
 * Bouton : le bouton "ajouter une fiole bonus" se situe à droite du bouton "recommencer" et n'est affiché qu'en cas de défaite au niveau
 * Comportement attendu du jeu : le mécanisme de vérification de la défaite doit prendre en compte cette nouvelle fiole de 1 de capacité dès son ajout : appuyer sur le bouton "bonus" doit enclencher immédiatement un recalcul de la défaite et permettre au joueur de reprendre immédiatement sa partie avec la nouvelle fiole. Une nouvelle défaite est déclarée si la grille ne peut pas être résolue EN PRENANT EN COMPTE cette nouvelle fiole
+* Ces fioles peuvent dépasser les capacités du terrain (>15). En cas de dépassement de la capacité normale du terrain, ajouter une rangée supplémentaire
+* Les fioles bonus ne sont jamais considérées comme pleines et ne sont jamais fermées : elles restent source/destination jusqu'à résolution du niveau
 
 
 ## Mécaniques de jeu :

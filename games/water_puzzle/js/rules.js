@@ -3,13 +3,32 @@ export const MAX_COLORS = 13;
 export const TUBES_PER_ROW = 5;
 
 
+export function getTubeCapacity(tube, defaultCapacity) {
+
+    return (
+        Number.isSafeInteger(tube?.capacity) &&
+        tube.capacity > 0
+    )
+        ? tube.capacity
+        : defaultCapacity;
+}
+
+
 export function isMonochromeFull(tube, capacity) {
 
+    if (
+        tube?.isBonus === true
+    ) {
+        return false;
+    }
+
     const layers = tube?.layers;
+    const tubeCapacity =
+        getTubeCapacity(tube, capacity);
 
     return (
         Array.isArray(layers) &&
-        layers.length === capacity &&
+        layers.length === tubeCapacity &&
         layers.length > 0 &&
         layers.every(
             color => color === layers[0]

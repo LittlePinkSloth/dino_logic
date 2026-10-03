@@ -7,6 +7,7 @@ import {
 import {
     areSameRowNeighbors,
     assertLevelLimits,
+    getTubeCapacity,
     isMonochromeFull,
     isTubeClosed
 } from "./rules.js";
@@ -289,6 +290,43 @@ export function restartGame() {
      * Recalcule les éventuels déblocages.
      */
     unblockEligibleTubes();
+}
+
+
+/*
+ * ============================================================
+ * FIOLE BONUS APRÈS DÉFAITE
+ * ============================================================
+ */
+
+export function addBonusTube() {
+
+    if (
+        !lost ||
+        isSolved()
+    ) {
+        return false;
+    }
+
+    const bonusTube = {
+        type: "normal",
+        layers: [],
+        capacity: 1,
+        isBonus: true
+    };
+
+    tubes.push(bonusTube);
+
+    initialTubes.push({
+        ...bonusTube,
+        layers: []
+    });
+
+    selectedTube = null;
+
+    updateLostState();
+
+    return true;
 }
 
 
@@ -902,8 +940,14 @@ function canPour(
         return false;
     }
 
+    const targetCapacity =
+        getTubeCapacity(
+            target,
+            capacity
+        );
+
     if (
-        target.layers.length >= capacity
+        target.layers.length >= targetCapacity
     ) {
         return false;
     }
@@ -973,7 +1017,7 @@ export function pourTube(
     }
 
     const freeSpace =
-        capacity -
+        getTubeCapacity(target, capacity) -
         target.layers.length;
 
     const amountToPour =
