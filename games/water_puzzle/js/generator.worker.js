@@ -111,6 +111,30 @@ self.onmessage = event => {
                     }
                 );
 
+            let bonusSolvable = false;
+
+            if (!result.solved) {
+                const bonusTubes = [
+                    ...tubes,
+                    {
+                        type: "normal",
+                        layers: [],
+                        capacity: 1,
+                        isBonus: true
+                    }
+                ];
+
+                bonusSolvable =
+                    solveLevel(
+                        bonusTubes,
+                        capacity,
+                        {
+                            maxMoves: Infinity,
+                            returnPath: false
+                        }
+                    ).solved;
+            }
+
             self.postMessage({
                 type:
                     "solvabilityChecked",
@@ -118,7 +142,9 @@ self.onmessage = event => {
                 requestId,
 
                 solvable:
-                    result.solved
+                    result.solved,
+
+                bonusSolvable
             });
 
         } catch (error) {

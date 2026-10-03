@@ -35,6 +35,7 @@ const solvabilityWorker =
 
 
 let solvabilityRequestId = 0;
+let bonusTubeSolvable = false;
 
 
 /*
@@ -218,6 +219,7 @@ export function initializeGame(level) {
     moves = 0;
 
     lost = false;
+    bonusTubeSolvable = false;
 
     pendingUnlockedTubes = [];
 
@@ -277,6 +279,7 @@ export function restartGame() {
     moves = 0;
 
     lost = false;
+    bonusTubeSolvable = false;
 
     pendingUnlockedTubes = [];
 
@@ -303,10 +306,13 @@ export function addBonusTube() {
 
     if (
         !lost ||
+        !bonusTubeSolvable ||
         isSolved()
     ) {
         return false;
     }
+
+    bonusTubeSolvable = false;
 
     const bonusTube = {
         type: "normal",
@@ -667,6 +673,7 @@ solvabilityWorker.onmessage =
             if (isSolved()) {
 
                 lost = false;
+                bonusTubeSolvable = false;
 
                 notifyGameStateChanged();
 
@@ -675,6 +682,9 @@ solvabilityWorker.onmessage =
 
             lost =
                 !data.solvable;
+            bonusTubeSolvable =
+                lost &&
+                data.bonusSolvable === true;
 
             /*
              * Le résultat arrive de manière asynchrone.
@@ -708,6 +718,7 @@ solvabilityWorker.onmessage =
              * considérée comme une défaite.
              */
             lost = false;
+            bonusTubeSolvable = false;
 
             notifyGameStateChanged();
 
@@ -725,6 +736,7 @@ solvabilityWorker.onerror =
         );
 
         lost = false;
+        bonusTubeSolvable = false;
 
         notifyGameStateChanged();
     };
@@ -735,12 +747,8 @@ solvabilityWorker.onerror =
  * DÉTECTION DE DÉFAITE
  * ============================================================
  *
- * 1. Aucun coup légal :
- *    décision immédiate dans le thread principal.
- *
- * 2. Des coups sont encore disponibles :
- *    le Worker vérifie si l'état possède réellement
- *    une solution.
+ * Le Worker vérifie si l'état possède une solution, puis teste
+ * l'ajout d'une fiole bonus si le plateau est perdu.
  */
 
 function updateLostState() {
@@ -749,6 +757,7 @@ function updateLostState() {
      * Chaque nouvel état invalide les réponses précédentes.
      */
     solvabilityRequestId++;
+    bonusTubeSolvable = false;
 
     if (isSolved()) {
 
@@ -760,35 +769,11 @@ function updateLostState() {
     }
 
     /*
-     * Premier cas : aucun coup légal.
-     *
-     * Cette vérification est immédiate.
-     */
-    const possibleMoves =
-        getPossibleMoves(
-            tubes,
-            capacity
-        );
-
-    if (
-        possibleMoves.length === 0
-    ) {
-
-        lost = true;
-
-        notifyGameStateChanged();
-
-        return;
-    }
-
-    /*
-     * Il reste des coups, mais cela ne signifie pas
-     * nécessairement que la victoire est encore atteignable.
-     *
-     * Le Worker vérifie donc si l'état possède encore
-     * une solution.
+     * Le Worker vérifie si le plateau est solvable et, en cas
+     * de défaite, si l'ajout d'une fiole bonus permet une victoire.
      */
     lost = false;
+    bonusTubeSolvable = false;
 
     notifyGameStateChanged();
 
@@ -1119,6 +1104,10 @@ export function getGameState() {
             solved
                 ? false
                 : lost,
+
+        bonusTubeSolvable:
+            lost &&
+            bonusTubeSolvable,
 
         level:
             getLevelInfo()

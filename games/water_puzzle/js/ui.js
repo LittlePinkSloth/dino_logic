@@ -92,7 +92,7 @@ export function initUI(nextLevelCallback) {
             "Une fiole ne peut recevoir que la même couleur ou être vide. Le jeu verse autant de couches identiques que possible dans la place disponible.",
             "Une fiole pleine et monochrome est terminée et ne peut plus être utilisée.",
             "Triez toutes les couleurs pour terminer le niveau.",
-            "Après une défaite, une fiole bonus d'une case peut être ajoutée jusqu'à la victoire.",
+            "Après une défaite, une fiole bonus d'une case est proposée uniquement si elle permet encore de résoudre le niveau.",
             "Des fioles particulières peuvent apparaître. Leur règle est indiquée dans la légende sous le plateau."
         ],
         getStatistics: () => [
@@ -916,7 +916,9 @@ function renderRestartButton(state) {
             "block";
 
         bonusTubeButton.style.display =
-            "block";
+            state.bonusTubeSolvable
+                ? "block"
+                : "none";
 
         return;
     }
