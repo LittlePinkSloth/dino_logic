@@ -1,7 +1,7 @@
 {
   "id": "water_puzzle",
   "name": "Water Puzzle",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Triez les couleurs dans les fioles et relevez les défis spéciaux.",
   "icon": "assets/icons/water-puzzle.svg",
   "files": [
@@ -13,6 +13,7 @@
     "js/generator.js",
     "js/generator.worker.js",
     "js/levelManager.js",
+    "js/rules.js",
     "js/solver.js",
     "js/ui.js",
     "assets/icons/water-puzzle.svg"

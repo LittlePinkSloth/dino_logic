@@ -33,7 +33,7 @@ const STATISTICS_KEY = "waterPuzzleProgress";
 
 
 let currentLevelNumber = loadProgress().currentLevel;*/
-let currentLevelNumber = 15;
+let currentLevelNumber = 150;
 
 /*
  * ============================================================

@@ -134,14 +134,13 @@ h1 {
 
     padding: 28px 18px;
 
-    display: flex;
+    display: grid;
 
+    grid-template-columns: repeat(5, minmax(0, 62px));
     justify-content: center;
-    align-items: flex-end;
+    align-items: end;
 
     gap: clamp(8px, 1.6vw, 18px);
-
-    flex-wrap: wrap;
 
     border: 1px solid #bfd4e6;
     border-radius: 22px;
@@ -163,6 +162,24 @@ h1 {
     box-shadow:
         inset 0 2px 0 rgba(255, 255, 255, 0.92),
         0 16px 34px rgba(43, 82, 119, 0.1);
+}
+
+
+@media (max-width: 520px) {
+
+    .board {
+        max-width: 400px;
+
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+
+        gap: 8px;
+
+        padding: 24px 10px;
+    }
+
+    .board .tube {
+        width: 100%;
+    }
 }
 
 /*
@@ -228,8 +245,8 @@ h1 {
      * Largeur fixe volontaire :
      * les fioles ne sont jamais rétrécies sur mobile.
      */
-    width: 68px;
-    height: 236px;
+    width: 62px;
+    height: 213px;
 
     padding: 9px 6px 8px;
 
@@ -962,8 +979,8 @@ h1 {
      * Aucun calcul ne vient réduire la fiole.
      */
     .tube {
-        width: 55px;
-        height: 188px;
+        width: 50px;
+        height: 160px;
 
         padding:
             9px

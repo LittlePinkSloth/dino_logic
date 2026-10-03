@@ -5,6 +5,10 @@ import {
     DEFAULT_MAX_SOLUTION_MOVES
 } from "./solver.js";
 
+import {
+    assertLevelLimits
+} from "./rules.js";
+
 
 const CAPACITY = 4;
 
@@ -736,6 +740,8 @@ function createCandidateLevel(
             useFrozen,
             useHidden
         );
+
+    assertLevelLimits(tubes);
 
     return {
 

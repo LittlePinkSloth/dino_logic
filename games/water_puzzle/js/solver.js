@@ -1,4 +1,9 @@
 /* solver.js */
+import {
+    areSameRowNeighbors,
+    isMonochromeFull,
+    isTubeClosed
+} from "./rules.js";
 
 const DEFAULT_CAPACITY = 4;
 
@@ -113,29 +118,10 @@ function isTubeSolved(
         return true;
     }
 
-    if (
-        layers.length !== capacity
-    ) {
-        return false;
-    }
-
-    const firstColor =
-        layers[0];
-
-    for (
-        let i = 1;
-        i < layers.length;
-        i++
-    ) {
-
-        if (
-            layers[i] !== firstColor
-        ) {
-            return false;
-        }
-    }
-
-    return true;
+    return isTubeClosed(
+        tube,
+        capacity
+    );
 }
 
 
@@ -184,41 +170,10 @@ function isTubeMonochromeFull(
     capacity
 ) {
 
-    if (
-        !tube
-    ) {
-        return false;
-    }
-
-    if (
-        tube.layers.length !== capacity
-    ) {
-        return false;
-    }
-
-    if (
-        tube.layers.length === 0
-    ) {
-        return false;
-    }
-
-    const firstColor =
-        tube.layers[0];
-
-    for (
-        let i = 1;
-        i < tube.layers.length;
-        i++
-    ) {
-
-        if (
-            tube.layers[i] !== firstColor
-        ) {
-            return false;
-        }
-    }
-
-    return true;
+    return isMonochromeFull(
+        tube,
+        capacity
+    );
 }
 
 
@@ -280,37 +235,15 @@ function hasMonochromeFullNeighbor(
     capacity
 ) {
 
-    const leftIndex =
-        index - 1;
-
-    if (
-        leftIndex >= 0 &&
-        tubes[leftIndex].type === "normal" &&
-        isTubeMonochromeFull(
-            tubes[leftIndex],
-            capacity
-        )
-    ) {
-
-        return true;
-    }
-
-    const rightIndex =
-        index + 1;
-
-    if (
-        rightIndex < tubes.length &&
-        tubes[rightIndex].type === "normal" &&
-        isTubeMonochromeFull(
-            tubes[rightIndex],
-            capacity
-        )
-    ) {
-
-        return true;
-    }
-
-    return false;
+    return tubes.some(
+        (candidate, candidateIndex) =>
+            candidate.type === "normal" &&
+            areSameRowNeighbors(index, candidateIndex) &&
+            isTubeMonochromeFull(
+                candidate,
+                capacity
+            )
+    );
 }
 
 
@@ -467,20 +400,11 @@ export function getPossibleMoves(
             tubes[sourceIndex];
 
         if (
-            source.layers.length === 0
-        ) {
-            continue;
-        }
-
-        if (
-            source.type === "stone"
-        ) {
-            continue;
-        }
-
-        if (
+            source.layers.length === 0 ||
+            source.type === "stone" ||
             source.type === "frozen" ||
-            source.type === "hidden"
+            source.type === "hidden" ||
+            isTubeClosed(source, capacity)
         ) {
             continue;
         }
@@ -521,6 +445,9 @@ export function getPossibleMoves(
                 tubes[targetIndex];
 
             if (
+                target.type === "frozen" ||
+                target.type === "hidden" ||
+                isTubeClosed(target, capacity) ||
                 target.layers.length >= capacity
             ) {
                 continue;
