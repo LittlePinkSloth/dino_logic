@@ -14,6 +14,25 @@ export function getTubeCapacity(tube, defaultCapacity) {
 }
 
 
+export function normalizeMysteryLayers(tube) {
+
+    const layers =
+        Array.isArray(tube?.layers)
+            ? tube.layers
+            : [];
+
+    const mysteryLayers =
+        Array.isArray(tube?.mysteryLayers)
+            ? tube.mysteryLayers
+            : [];
+
+    return layers.map(
+        (_, index) =>
+            mysteryLayers[index] === true
+    );
+}
+
+
 export function isMonochromeFull(tube, capacity) {
 
     if (
@@ -42,6 +61,17 @@ export function isTubeClosed(tube, capacity) {
     return isMonochromeFull(
         tube,
         capacity
+    );
+}
+
+
+export function canMixTube(tube, capacity) {
+
+    return (
+        Array.isArray(tube?.layers) &&
+        tube.layers.length > 1 &&
+        !["stone", "frozen", "hidden"].includes(tube.type) &&
+        !isTubeClosed(tube, capacity)
     );
 }
 

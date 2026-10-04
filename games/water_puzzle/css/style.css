@@ -718,18 +718,29 @@ h1 {
     margin: 0;
 }
 
+.game-action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 23px;
+    line-height: 1;
+}
+
 .bonus-tube-button {
-    padding: 10px 16px;
+    width: 50px;
+    height: 50px;
+    padding: 7px;
 
     border: 1px solid #537e68;
-    border-radius: 999px;
+    border-radius: 50%;
 
     background: #638f75;
 
     color: #fff;
 
     font: inherit;
-    font-size: 14px;
     font-weight: 700;
 
     cursor: pointer;
@@ -739,6 +750,67 @@ h1 {
         background 0.15s ease;
 }
 
+.mix-tube-button {
+    width: 50px;
+    height: 50px;
+    padding: 7px;
+
+    border: 1px solid #a875b6;
+    border-radius: 50%;
+
+    background: #bd8acb;
+    color: #fff;
+
+    font: inherit;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.mix-tube-button:hover {
+    transform: translateY(-2px);
+    background: #a875b6;
+}
+
+.mix-tube-button.is-armed {
+    box-shadow: 0 0 0 4px rgba(168, 117, 182, 0.25);
+}
+
+.bottle-smiley {
+    position: relative;
+    width: 25px;
+    height: 28px;
+    border: 2px solid currentColor;
+    border-radius: 6px 6px 9px 9px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.bottle-smiley::before {
+    position: absolute;
+    top: -7px;
+    left: 6px;
+    width: 9px;
+    height: 5px;
+    border: 2px solid currentColor;
+    border-bottom: 0;
+    border-radius: 4px 4px 0 0;
+    content: "";
+}
+
+.bottle-smiley-face {
+    position: absolute;
+    inset: 3px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+}
+
 @media (max-width: 380px) {
 
     .game-controls {
@@ -746,7 +818,8 @@ h1 {
     }
 
     .game-controls .restart-button,
-    .game-controls .bonus-tube-button {
+    .game-controls .bonus-tube-button,
+    .game-controls .mix-tube-button {
         min-height: 44px;
 
         padding: 8px;
@@ -756,8 +829,10 @@ h1 {
         font-size: 13px;
     }
 
-    .game-controls .bonus-tube-button {
-        font-size: 12px;
+    .game-controls .bonus-tube-button,
+    .game-controls .mix-tube-button {
+        width: 44px;
+        height: 44px;
     }
 }
 
@@ -796,6 +871,28 @@ h1 {
 
 .tube.tube-bonus .water {
     height: 100%;
+}
+
+.tube.mix-target {
+    outline: 3px dashed #a875b6;
+    outline-offset: 3px;
+}
+
+.mystery-water {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: rgba(255, 255, 255, 0.8);
+    background:
+        repeating-linear-gradient(
+            135deg,
+            #8675a8 0 5px,
+            #a99ac3 5px 10px
+        );
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 
@@ -914,6 +1011,7 @@ h1 {
 .next-level-button:focus-visible,
 .restart-button:focus-visible,
 .bonus-tube-button:focus-visible,
+.mix-tube-button:focus-visible,
 .legend-trigger:focus-visible {
     outline: 3px solid #4f91ca;
 

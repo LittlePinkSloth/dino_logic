@@ -5,10 +5,14 @@ import {
     selectTube,
     pourTube,
     addBonusTube,
+    mixTube,
     restartGame,
     consumeUnlockedTubes,
     onGameStateChange
 } from "./game.js";
+import {
+    canMixTube
+} from "./rules.js";
 
 import { initGameShell } from "../../../common/ui/game-shell.js";
 import { showSuccessAnimation } from "../../../common/ui/success-animation.js";
@@ -24,11 +28,13 @@ let specialLegendElement;
 let nextLevelButton;
 let restartButton;
 let bonusTubeButton;
+let mixTubeButton;
 let controlsElement;
 
 let onNextLevel = null;
 
 let loadingNextLevel = false;
+let mixingMode = false;
 let gameShell;
 let trackedLevelNumber = null;
 let lastSolvedState = false;
@@ -93,6 +99,7 @@ export function initUI(nextLevelCallback) {
             "Une fiole pleine et monochrome est terminée et ne peut plus être utilisée.",
             "Triez toutes les couleurs pour terminer le niveau.",
             "Après une défaite, une fiole bonus d'une case est proposée uniquement si elle permet encore de résoudre le niveau.",
+            "Le bouton smiley permet de mélanger une fiole non verrouillée. Certaines couches marquées ? cachent leur couleur jusqu'à ce qu'elles soient révélées.",
             "Des fioles particulières peuvent apparaître. Leur règle est indiquée dans la légende sous le plateau."
         ],
         getStatistics: () => [
@@ -152,27 +159,33 @@ export function initUI(nextLevelCallback) {
     );
 
     bonusTubeButton =
-        document.createElement("button");
-
-    bonusTubeButton.type =
-        "button";
-
-    bonusTubeButton.className =
-        "bonus-tube-button";
-
-    bonusTubeButton.textContent =
-        "Ajouter une fiole bonus";
+        createActionButton(
+            "bonus-tube-button",
+            "Ajouter une fiole bonus",
+            createBottleSmileyIcon(),
+            handleBonusTubeClick
+        );
 
     bonusTubeButton.style.display =
         "none";
 
-    bonusTubeButton.addEventListener(
-        "click",
-        handleBonusTubeClick
-    );
-
     controlsElement.append(
         bonusTubeButton
+    );
+
+    mixTubeButton =
+        createActionButton(
+            "mix-tube-button",
+            "Mélanger une fiole",
+            "☺",
+            handleMixTubeClick
+        );
+
+    mixTubeButton.style.display =
+        "none";
+
+    controlsElement.append(
+        mixTubeButton
     );
 
     boardElement.addEventListener(
@@ -233,6 +246,7 @@ async function handleNextLevelClick() {
     }
 
     loadingNextLevel = true;
+    mixingMode = false;
 
     nextLevelButton.disabled = true;
 
@@ -268,6 +282,7 @@ async function handleNextLevelClick() {
 
 function handleRestartClick() {
 
+    mixingMode = false;
     restartGame();
 
     loadingNextLevel = false;
@@ -283,6 +298,83 @@ function handleBonusTubeClick() {
     ) {
         render();
     }
+}
+
+
+function createActionButton(
+    className,
+    label,
+    icon,
+    onClick
+) {
+
+    const button =
+        document.createElement("button");
+
+    button.type = "button";
+    button.className = className;
+    button.setAttribute("aria-label", label);
+    button.title = label;
+
+    const iconElement =
+        document.createElement("span");
+
+    iconElement.className =
+        "game-action-icon";
+    iconElement.setAttribute("aria-hidden", "true");
+
+    if (typeof icon === "string") {
+        iconElement.textContent = icon;
+    } else {
+        iconElement.append(icon);
+    }
+
+    button.append(iconElement);
+    button.addEventListener("click", onClick);
+
+    return button;
+}
+
+
+function createBottleSmileyIcon() {
+
+    const bottle =
+        document.createElement("span");
+
+    bottle.className =
+        "bottle-smiley";
+
+    const face =
+        document.createElement("span");
+
+    face.className =
+        "bottle-smiley-face";
+    face.textContent = "☺";
+
+    bottle.append(face);
+
+    return bottle;
+}
+
+
+function handleMixTubeClick() {
+
+    const state =
+        getGameState();
+
+    if (
+        state.solved ||
+        (
+            state.lost &&
+            state.mixableTubeIndexes.length === 0
+        )
+    ) {
+        return;
+    }
+
+    mixingMode = !mixingMode;
+    selectTube(null);
+    render();
 }
 
 
@@ -308,6 +400,30 @@ function handleBoardClick(event) {
 
     const state =
         getGameState();
+
+    if (
+        mixingMode
+    ) {
+        const canSelect =
+            canMixTube(
+                state.tubeInfo[index],
+                state.capacity
+            ) &&
+            (
+                !state.lost ||
+                state.mixableTubeIndexes.includes(index)
+            );
+
+        if (
+            canSelect &&
+            mixTube(index)
+        ) {
+            mixingMode = false;
+        }
+
+        render();
+        return;
+    }
 
     if (
         state.solved ||
@@ -451,6 +567,16 @@ export function render() {
     const state =
         getGameState();
 
+    if (
+        state.solved ||
+        (
+            state.lost &&
+            state.mixableTubeIndexes.length === 0
+        )
+    ) {
+        mixingMode = false;
+    }
+
     trackLevelCompletion(state);
 
     renderBoard(state);
@@ -458,6 +584,8 @@ export function render() {
     renderNextLevelButton(state);
 
     renderRestartButton(state);
+
+    renderMixTubeButton(state);
 }
 
 
@@ -502,6 +630,18 @@ function renderBoard(state) {
                 tube.isBonus === true
             );
 
+            const canMix =
+                canMixTube(tube, state.capacity) &&
+                (
+                    !state.lost ||
+                    state.mixableTubeIndexes.includes(index)
+                );
+
+            tubeElement.classList.toggle(
+                "mix-target",
+                mixingMode && canMix
+            );
+
             if (
                 state.selectedTube === index
             ) {
@@ -544,7 +684,7 @@ function renderBoard(state) {
             } else {
 
                 tube.layers.forEach(
-                    color => {
+                    (color, layerIndex) => {
 
                         const water =
                             document.createElement("div");
@@ -552,11 +692,24 @@ function renderBoard(state) {
                         water.className =
                             "water";
 
-                        water.dataset.color =
-                            color;
+                        if (
+                            tube.mysteryLayers[layerIndex]
+                        ) {
+                            water.classList.add(
+                                "mystery-water"
+                            );
+                            water.textContent = "?";
+                            water.setAttribute(
+                                "aria-label",
+                                "Couleur mystère"
+                            );
+                        } else {
+                            water.dataset.color =
+                                color;
 
-                        water.style.backgroundColor =
-                            getColorValue(color);
+                            water.style.backgroundColor =
+                                getColorValue(color);
+                        }
 
                         tubeElement.appendChild(
                             water
@@ -596,7 +749,16 @@ function getTubeLabel(tube, index) {
     const colors = tube.type === "hidden"
         ? `couleur cible ${getColorName(tube.targetColor)}`
         : tube.layers.length > 0
-            ? `couleurs visibles ${[...tube.layers].reverse().map(getColorName).join(", ")}`
+            ? `couleurs visibles ${[...tube.layers].reverse().map(
+                (color, reverseIndex) => {
+                    const layerIndex =
+                        tube.layers.length - 1 - reverseIndex;
+
+                    return tube.mysteryLayers[layerIndex]
+                        ? "mystère"
+                        : getColorName(color);
+                }
+            ).join(", ")}`
             : "vide";
 
     const typeName = tube.isBonus
@@ -928,6 +1090,36 @@ function renderRestartButton(state) {
 
     bonusTubeButton.style.display =
         "none";
+}
+
+
+function renderMixTubeButton(state) {
+
+    const canMix =
+        !state.solved &&
+        (
+            !state.lost ||
+            state.mixableTubeIndexes.length > 0
+        );
+
+    mixTubeButton.style.display =
+        canMix
+            ? "block"
+            : "none";
+
+    mixTubeButton.classList.toggle(
+        "is-armed",
+        mixingMode
+    );
+
+    mixTubeButton.setAttribute(
+        "aria-pressed",
+        String(mixingMode)
+    );
+
+    if (!canMix) {
+        mixingMode = false;
+    }
 }
 
 

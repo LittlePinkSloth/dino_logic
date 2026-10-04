@@ -145,6 +145,20 @@ function shouldUseHidden(
 }
 
 
+function shouldUseMystery(
+    levelNumber
+) {
+
+    if (
+        levelNumber < 9
+    ) {
+        return false;
+    }
+
+    return Math.random() < 0.5;
+}
+
+
 /*
  * ============================================================
  * COULEURS
@@ -333,6 +347,8 @@ function createColorTubes(
 
             layers: [],
 
+            mysteryLayers: [],
+
             targetColor: null
         };
 
@@ -346,6 +362,8 @@ function createColorTubes(
                 layers[layerIndex]
             );
 
+            tube.mysteryLayers.push(false);
+
             layerIndex++;
         }
 
@@ -355,6 +373,54 @@ function createColorTubes(
     }
 
     return tubes;
+}
+
+
+function addMysteryLayers(tubes) {
+
+    const candidates = [];
+
+    tubes.forEach(
+        (tube, tubeIndex) => {
+            for (
+                let layerIndex = 1;
+                layerIndex < tube.layers.length - 1;
+                layerIndex++
+            ) {
+                candidates.push({
+                    tubeIndex,
+                    layerIndex
+                });
+            }
+        }
+    );
+
+    if (
+        candidates.length === 0
+    ) {
+        return;
+    }
+
+    const mysteryCount =
+        randomInt(
+            1,
+            Math.min(2, candidates.length)
+        );
+
+    for (
+        let count = 0;
+        count < mysteryCount;
+        count++
+    ) {
+        const candidateIndex =
+            randomInt(0, candidates.length - 1);
+
+        const candidate =
+            candidates.splice(candidateIndex, 1)[0];
+
+        tubes[candidate.tubeIndex]
+            .mysteryLayers[candidate.layerIndex] = true;
+    }
 }
 
 
@@ -675,6 +741,8 @@ function createShuffledTubes(
 
             layers: [],
 
+            mysteryLayers: [],
+
             targetColor: null
         });
 
@@ -686,6 +754,8 @@ function createShuffledTubes(
 
             layers: [],
 
+            mysteryLayers: [],
+
             targetColor: null
         });
     }
@@ -695,6 +765,8 @@ function createShuffledTubes(
         type: "normal",
 
         layers: [],
+
+        mysteryLayers: [],
 
         targetColor: null
     });
@@ -733,6 +805,11 @@ function createCandidateLevel(
             levelNumber
         );
 
+    const useMystery =
+        shouldUseMystery(
+            levelNumber
+        );
+
     const tubes =
         createShuffledTubes(
             colors,
@@ -740,6 +817,12 @@ function createCandidateLevel(
             useFrozen,
             useHidden
         );
+
+    if (
+        useMystery
+    ) {
+        addMysteryLayers(tubes);
+    }
 
     assertLevelLimits(tubes);
 

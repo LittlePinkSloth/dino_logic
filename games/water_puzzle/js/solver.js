@@ -3,7 +3,8 @@ import {
     areSameRowNeighbors,
     getTubeCapacity,
     isMonochromeFull,
-    isTubeClosed
+    isTubeClosed,
+    normalizeMysteryLayers
 } from "./rules.js";
 
 const DEFAULT_CAPACITY = 4;
@@ -28,6 +29,7 @@ function normalizeTube(tube) {
         return {
             type: "normal",
             layers: [...tube],
+            mysteryLayers: tube.map(() => false),
             targetColor: null
         };
     }
@@ -51,13 +53,17 @@ function normalizeTube(tube) {
             layers:
                 Array.isArray(tube.layers)
                     ? [...tube.layers]
-                    : []
+                    : [],
+
+            mysteryLayers:
+                normalizeMysteryLayers(tube)
         };
     }
 
     return {
         type: "normal",
         layers: [],
+        mysteryLayers: [],
         targetColor: null
     };
 }
@@ -92,7 +98,10 @@ function serializeState(tubes) {
                 [
                     tube.type,
                     tube.targetColor ?? "",
-                    tube.layers.join(",")
+                    tube.layers.join(","),
+                    tube.mysteryLayers.map(
+                        isMystery => isMystery ? "1" : "0"
+                    ).join("")
                 ].join(":")
         )
         .join("|");
@@ -154,7 +163,10 @@ function cloneTubes(tubes) {
             ...tube,
 
             layers:
-                [...tube.layers]
+                [...tube.layers],
+
+            mysteryLayers:
+                [...tube.mysteryLayers]
         })
     );
 }
@@ -524,7 +536,14 @@ function applyMove(
         target.layers.push(
             source.layers.pop()
         );
+
+        target.mysteryLayers.push(
+            source.mysteryLayers.pop()
+        );
     }
+
+    revealTopMystery(source);
+    revealTopMystery(target);
 
     thawAfterMove(
         nextTubes,
@@ -532,6 +551,20 @@ function applyMove(
     );
 
     return nextTubes;
+}
+
+
+function revealTopMystery(tube) {
+
+    const topIndex =
+        tube.mysteryLayers.length - 1;
+
+    if (
+        topIndex >= 0 &&
+        tube.mysteryLayers[topIndex]
+    ) {
+        tube.mysteryLayers[topIndex] = false;
+    }
 }
 
 

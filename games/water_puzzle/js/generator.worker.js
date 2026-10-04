@@ -8,6 +8,55 @@ import {
     solveLevel
 } from "./solver.js";
 
+import {
+    canMixTube
+} from "./rules.js";
+
+
+function getUniquePermutations(items) {
+
+    const permutations = [];
+    const used = Array(items.length).fill(false);
+    const current = [];
+    const seen = new Set();
+
+    function visit() {
+
+        if (
+            current.length === items.length
+        ) {
+            const key = JSON.stringify(current);
+
+            if (!seen.has(key)) {
+                seen.add(key);
+                permutations.push([...current]);
+            }
+
+            return;
+        }
+
+        for (
+            let index = 0;
+            index < items.length;
+            index++
+        ) {
+            if (used[index]) {
+                continue;
+            }
+
+            used[index] = true;
+            current.push(items[index]);
+            visit();
+            current.pop();
+            used[index] = false;
+        }
+    }
+
+    visit();
+
+    return permutations;
+}
+
 
 self.onmessage = event => {
 
@@ -112,6 +161,7 @@ self.onmessage = event => {
                 );
 
             let bonusSolvable = false;
+            const mixableTubeIndexes = [];
 
             if (!result.solved) {
                 const bonusTubes = [
@@ -133,6 +183,53 @@ self.onmessage = event => {
                             returnPath: false
                         }
                     ).solved;
+
+                for (
+                    let tubeIndex = 0;
+                    tubeIndex < tubes.length;
+                    tubeIndex++
+                ) {
+                    const tube = tubes[tubeIndex];
+
+                    if (
+                        !canMixTube(tube, capacity)
+                    ) {
+                        continue;
+                    }
+
+                    const permutations =
+                        getUniquePermutations(tube.layers);
+
+                    const isSolvableByMix =
+                        permutations.some(
+                            layers => {
+                                const candidateTubes =
+                                    tubes.map(
+                                        (candidate, index) => ({
+                                            ...candidate,
+                                            layers:
+                                                index === tubeIndex
+                                                    ? layers
+                                                    : [...candidate.layers]
+                                        })
+                                    );
+
+                                return solveLevel(
+                                    candidateTubes,
+                                    capacity,
+                                    {
+                                        maxMoves: Infinity,
+                                        returnPath: false
+                                    }
+                                ).solved;
+                            }
+                        );
+
+                    if (isSolvableByMix) {
+                        mixableTubeIndexes.push(tubeIndex);
+                        break;
+                    }
+                }
             }
 
             self.postMessage({
@@ -144,7 +241,9 @@ self.onmessage = event => {
                 solvable:
                     result.solved,
 
-                bonusSolvable
+                bonusSolvable,
+
+                mixableTubeIndexes
             });
 
         } catch (error) {

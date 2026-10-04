@@ -22,7 +22,7 @@
       "id": "water_puzzle",
       "name": "Water Puzzle",
       "description": "Triez les couleurs dans les fioles et relevez les défis spéciaux.",
-      "version": "0.10.1",
+      "version": "0.11.0",
       "path": "games/water_puzzle/",
       "entry": "games/water_puzzle/index.html",
       "icon": "games/water_puzzle/assets/icons/water-puzzle.svg"

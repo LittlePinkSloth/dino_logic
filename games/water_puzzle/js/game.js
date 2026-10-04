@@ -7,9 +7,11 @@ import {
 import {
     areSameRowNeighbors,
     assertLevelLimits,
+    canMixTube,
     getTubeCapacity,
     isMonochromeFull,
-    isTubeClosed
+    isTubeClosed,
+    normalizeMysteryLayers
 } from "./rules.js";
 
 
@@ -36,6 +38,7 @@ const solvabilityWorker =
 
 let solvabilityRequestId = 0;
 let bonusTubeSolvable = false;
+let mixableTubeIndexes = [];
 
 
 /*
@@ -139,7 +142,8 @@ function createTube(layers = []) {
 
     return {
         type: "normal",
-        layers: [...layers]
+        layers: [...layers],
+        mysteryLayers: layers.map(() => false)
     };
 }
 
@@ -166,6 +170,9 @@ function normalizeTube(tube) {
                     ? [...tube.layers]
                     : [],
 
+            mysteryLayers:
+                normalizeMysteryLayers(tube),
+
             targetColor:
                 tube.targetColor ??
                 null
@@ -183,7 +190,10 @@ function cloneTubes(sourceTubes) {
             ...tube,
 
             layers:
-                [...tube.layers]
+                [...tube.layers],
+
+            mysteryLayers:
+                [...tube.mysteryLayers]
         })
     );
 }
@@ -220,6 +230,7 @@ export function initializeGame(level) {
 
     lost = false;
     bonusTubeSolvable = false;
+    mixableTubeIndexes = [];
 
     pendingUnlockedTubes = [];
 
@@ -280,6 +291,7 @@ export function restartGame() {
 
     lost = false;
     bonusTubeSolvable = false;
+    mixableTubeIndexes = [];
 
     pendingUnlockedTubes = [];
 
@@ -317,6 +329,7 @@ export function addBonusTube() {
     const bonusTube = {
         type: "normal",
         layers: [],
+        mysteryLayers: [],
         capacity: 1,
         isBonus: true
     };
@@ -325,7 +338,8 @@ export function addBonusTube() {
 
     initialTubes.push({
         ...bonusTube,
-        layers: []
+        layers: [],
+        mysteryLayers: []
     });
 
     selectedTube = null;
@@ -358,7 +372,10 @@ export function getTubeInfo() {
             ...tube,
 
             layers:
-                [...tube.layers]
+                [...tube.layers],
+
+            mysteryLayers:
+                [...tube.mysteryLayers]
         })
     );
 }
@@ -674,6 +691,7 @@ solvabilityWorker.onmessage =
 
                 lost = false;
                 bonusTubeSolvable = false;
+                mixableTubeIndexes = [];
 
                 notifyGameStateChanged();
 
@@ -685,6 +703,16 @@ solvabilityWorker.onmessage =
             bonusTubeSolvable =
                 lost &&
                 data.bonusSolvable === true;
+            mixableTubeIndexes =
+                lost &&
+                Array.isArray(data.mixableTubeIndexes)
+                    ? data.mixableTubeIndexes.filter(
+                        index =>
+                            Number.isSafeInteger(index) &&
+                            index >= 0 &&
+                            index < tubes.length
+                    )
+                    : [];
 
             /*
              * Le résultat arrive de manière asynchrone.
@@ -719,6 +747,7 @@ solvabilityWorker.onmessage =
              */
             lost = false;
             bonusTubeSolvable = false;
+            mixableTubeIndexes = [];
 
             notifyGameStateChanged();
 
@@ -737,6 +766,7 @@ solvabilityWorker.onerror =
 
         lost = false;
         bonusTubeSolvable = false;
+        mixableTubeIndexes = [];
 
         notifyGameStateChanged();
     };
@@ -758,6 +788,7 @@ function updateLostState() {
      */
     solvabilityRequestId++;
     bonusTubeSolvable = false;
+    mixableTubeIndexes = [];
 
     if (isSolved()) {
 
@@ -1020,7 +1051,14 @@ export function pourTube(
         target.layers.push(
             source.layers.pop()
         );
+
+        target.mysteryLayers.push(
+            source.mysteryLayers.pop()
+        );
     }
+
+    revealTopMystery(source);
+    revealTopMystery(target);
 
     moves++;
 
@@ -1037,6 +1075,118 @@ export function pourTube(
      *
      * Le BFS éventuel est maintenant exécuté dans le Worker.
      */
+    updateLostState();
+
+    return true;
+}
+
+
+function revealTopMystery(tube) {
+
+    const topIndex =
+        tube.mysteryLayers.length - 1;
+
+    if (
+        topIndex >= 0 &&
+        tube.mysteryLayers[topIndex]
+    ) {
+        tube.mysteryLayers[topIndex] = false;
+    }
+}
+
+
+function shuffleLayers(layers) {
+
+    const shuffled = [...layers];
+
+    for (
+        let index = shuffled.length - 1;
+        index > 0;
+        index--
+    ) {
+        const swapIndex =
+            Math.floor(Math.random() * (index + 1));
+
+        [
+            shuffled[index],
+            shuffled[swapIndex]
+        ] = [
+            shuffled[swapIndex],
+            shuffled[index]
+        ];
+    }
+
+    return shuffled;
+}
+
+
+export function mixTube(index) {
+
+    const tube =
+        tubes[index];
+
+    if (
+        !canMixTube(tube, capacity) ||
+        (
+            lost &&
+            !mixableTubeIndexes.includes(index)
+        )
+    ) {
+        return false;
+    }
+
+    const layers =
+        tube.layers.map(
+            (color, layerIndex) => ({
+                color,
+                mystery: tube.mysteryLayers[layerIndex]
+            })
+        );
+
+    const mixedLayers =
+        shuffleLayers(layers);
+
+    const unchanged =
+        mixedLayers.every(
+            (layer, layerIndex) =>
+                layer.color === layers[layerIndex].color &&
+                layer.mystery === layers[layerIndex].mystery
+        );
+
+    if (
+        unchanged
+    ) {
+        const differentLayerIndex =
+            mixedLayers.findIndex(
+                layer =>
+                    layer.color !== mixedLayers[0].color ||
+                    layer.mystery !== mixedLayers[0].mystery
+            );
+
+        if (
+            differentLayerIndex > 0
+        ) {
+            [
+                mixedLayers[0],
+                mixedLayers[differentLayerIndex]
+            ] = [
+                mixedLayers[differentLayerIndex],
+                mixedLayers[0]
+            ];
+        }
+    }
+
+    tube.layers =
+        mixedLayers.map(layer => layer.color);
+
+    tube.mysteryLayers =
+        mixedLayers.map(layer => layer.mystery);
+
+    revealTopMystery(tube);
+
+    selectedTube = null;
+    moves++;
+
     updateLostState();
 
     return true;
@@ -1091,6 +1241,9 @@ export function getGameState() {
 
         tubeInfo:
             getTubeInfo(),
+
+        mixableTubeIndexes:
+            [...mixableTubeIndexes],
 
         capacity,
 
