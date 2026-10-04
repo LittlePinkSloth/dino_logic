@@ -177,7 +177,7 @@ export function initUI(nextLevelCallback) {
         createActionButton(
             "mix-tube-button",
             "Mélanger une fiole",
-            "☺",
+            "🥣",
             handleMixTubeClick
         );
 
