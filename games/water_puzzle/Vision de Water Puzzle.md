@@ -22,7 +22,7 @@
 * Une fiole fermée ne peut plus être ni destination ni source
 
 ## Bonus en cas de défaite :
-### Fiole bonus (implémenté mais bouton à changer)
+### Fiole bonus (implémenté)
 * Possibilité d'ajouter une fiole de 1 case
 * Comportement : fiole normale (source/destination sans contrainte)
 * Capacité : 1 case de n'importe quelle couleur
@@ -54,6 +54,7 @@
 * Une fois libérée, la couleur mystère se révèle et se comporte comme une couleur normale.
 * Le jeu connaît la couleur de la couleur mystère, seul le joueur ne la connaît pas tant qu'il ne la révèle pas.
 * Elle doit être prise en compte lors de la génération de la grille, qui doit rester solvable.
+* [TODO] lorsque la couleur mystère est précédée par sa couleur (révélée), elle ne doit pas être transférée à une autre fiole en même temps qu'elle : seule la couleur révélée est transférée, ce qui révèle la couleur de la couleur mystère, qui peut alors être transférée à son tour
 
 ### La boîte à clé
 * Entre 2 et 3 fioles peuvent être enfermées dans une même boîte opaque à serrure
@@ -75,6 +76,7 @@
 * Une fiole en pierre ne peut jamais être source
 * Elle est vide en début de partie
 * Il peut y avoir 0, 1 ou plusieurs fioles en pierre dans une même partie tant que cette dernière est résolvable
+* [TODO] bug : quand il y a une fiole cachée sur le terrain, remplir la fiole monochrome nécessaire à son dévérouillage DANS une fiole en pierre ne permet pas de la déverrouillée
 
 ### La fiole cachée (déjà implémentée)
 * Le joueur ne connaît pas le contenu en début de partie
@@ -83,6 +85,7 @@
 * Une fois révélée, elle se comporte comme une fiole classique
 * Il peut y avoir 0, 1 ou plusieurs fioles cachées dans une même partie tant que cette dernière est résolvable
 * Si plusieurs fioles cachées apparaissent dans un même niveau, elles peuvent avoir la même étiquette ou des étiquettes différentes
+* [TODO] bug : quand il y a une fiole cachée sur le terrain, remplir la fiole monochrome nécessaire à son dévérouillage DANS une fiole en pierre ne permet pas de la déverrouillée
 
 ### La fiole géante (implémenté)
 * Une fiole géante ne peut être que destination et jamais source
@@ -93,6 +96,7 @@
 * Le jeu doit veiller à fournir au joueur 2 à 3 fois plus de couleurs identiques pour pouvoir la remplir
 * Les parties contenant une fiole géante ne peuvent être gagnées que si la fiole géante est remplie
 * Une fiole géante ne peut jamais être gelée, masquée ou en boîte
+* [TODO] si 1 ou plusieurs portions de la couleur nécessaire à remplir la fiole géante est versée dans une fiole en pierre, la partie est immédiatement perdue sans qu'on ait besoin de terminer la fiole en pierre
 
 ### La fiole source conditionnelle (implémenté)
 * Elle est remplie en début de partie, de manière aléatoire
