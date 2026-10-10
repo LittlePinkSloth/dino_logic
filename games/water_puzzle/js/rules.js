@@ -65,6 +65,41 @@ export function isTubeClosed(tube, capacity) {
 }
 
 
+export function canBeSource(tube) {
+
+    return (
+        tube?.type === "normal" ||
+        tube?.type === "conditional"
+    );
+}
+
+
+export function canBeDestination(tube, color) {
+
+    if (
+        tube?.type === "frozen" ||
+        tube?.type === "hidden"
+    ) {
+        return false;
+    }
+
+    return (
+        tube?.type !== "conditional" ||
+        tube.targetColor === color
+    );
+}
+
+
+export function canUnlockOtherTubes(tube) {
+
+    return (
+        tube?.type === "normal" ||
+        tube?.type === "conditional" ||
+        tube?.type === "giant"
+    );
+}
+
+
 export function canMixTube(tube, capacity) {
 
     return (

@@ -7,6 +7,9 @@ import {
 import {
     areSameRowNeighbors,
     assertLevelLimits,
+    canBeDestination,
+    canBeSource,
+    canUnlockOtherTubes,
     canMixTube,
     getTubeCapacity,
     isMonochromeFull,
@@ -481,7 +484,7 @@ function hasFullNeighbor(index) {
 
     return tubes.some(
         (candidate, candidateIndex) =>
-            candidate.type === "normal" &&
+            canUnlockOtherTubes(candidate) &&
             areSameRowNeighbors(index, candidateIndex) &&
             isTubeMonochromeFull(candidateIndex)
     );
@@ -520,7 +523,7 @@ function hasTargetColorTube(index) {
             }
 
             return (
-                candidateTube.type === "normal" &&
+                canUnlockOtherTubes(candidateTube) &&
                 getMonochromeColor(candidateIndex) ===
                 targetColor
             );
@@ -651,6 +654,46 @@ function checkSolvabilityInWorker() {
 }
 
 
+function hasImpossibleGiantCompletion() {
+
+    const giantIndex =
+        tubes.findIndex(
+            tube =>
+                tube.type === "giant"
+        );
+
+    if (giantIndex < 0) {
+        return false;
+    }
+
+    const giant =
+        tubes[giantIndex];
+
+    if (isMonochromeFull(giant, capacity)) {
+        return false;
+    }
+
+    const colorCounts = new Map();
+
+    for (const tube of tubes) {
+        for (const color of tube.layers) {
+            colorCounts.set(
+                color,
+                (colorCounts.get(color) ?? 0) + 1
+            );
+        }
+    }
+
+    return tubes.some(
+        (tube, index) =>
+            index !== giantIndex &&
+            isMonochromeFull(tube, capacity) &&
+            (colorCounts.get(tube.layers[0]) ?? 0) >
+                DEFAULT_CAPACITY
+    );
+}
+
+
 /*
  * Réception des résultats du Worker de solvabilité.
  */
@@ -695,6 +738,13 @@ solvabilityWorker.onmessage =
 
                 notifyGameStateChanged();
 
+                return;
+            }
+
+            if (hasImpossibleGiantCompletion()) {
+                lost = true;
+                bonusTubeSolvable = false;
+                notifyGameStateChanged();
                 return;
             }
 
@@ -799,6 +849,14 @@ function updateLostState() {
         return;
     }
 
+    if (hasImpossibleGiantCompletion()) {
+        lost = true;
+        bonusTubeSolvable = false;
+        mixableTubeIndexes = [];
+        notifyGameStateChanged();
+        return;
+    }
+
     /*
      * Le Worker vérifie si le plateau est solvable et, en cas
      * de défaite, si l'ajout d'une fiole bonus permet une victoire.
@@ -853,7 +911,10 @@ export function selectTube(index) {
         return;
     }
 
-    if (tube.type === "stone") {
+    if (
+        tube.type === "stone" ||
+        tube.type === "giant"
+    ) {
 
         selectedTube = null;
 
@@ -938,21 +999,7 @@ function canPour(
         return false;
     }
 
-    if (source.type === "stone") {
-        return false;
-    }
-
-    if (
-        source.type === "frozen" ||
-        source.type === "hidden"
-    ) {
-        return false;
-    }
-
-    if (
-        target.type === "frozen" ||
-        target.type === "hidden"
-    ) {
+    if (!canBeSource(source)) {
         return false;
     }
 
@@ -972,6 +1019,10 @@ function canPour(
         source.layers[
             source.layers.length - 1
         ];
+
+    if (!canBeDestination(target, sourceColor)) {
+        return false;
+    }
 
     const targetColor =
         target.layers[
@@ -1203,6 +1254,10 @@ function isTubeSolved(tube) {
 
     const layers =
         tube.layers;
+
+    if (tube.type === "giant") {
+        return isMonochromeFull(tube, capacity);
+    }
 
     if (layers.length === 0) {
         return true;

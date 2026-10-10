@@ -5,6 +5,12 @@
 * Organisation sur l'écran (téléphone ou ordinateur) : 3 rangées de 5 fioles
 
 * Ajout progressif des mécaniques de jeu et des couleurs au fil des niveaux
+* Progression du générateur :
+  * 3 couleurs aux niveaux 1 à 6, 4 aux niveaux 7 à 11, 5 aux niveaux 12 à 16, puis 6 à partir du niveau 17
+  * Introduction des mécaniques : pierre au niveau 5, gel au niveau 10, couleur mystère au niveau 15, fiole cachée au niveau 20, source conditionnelle au niveau 25 et fiole géante au niveau 30
+  * Une mécanique nouvellement introduite apparaît au niveau de son introduction. Ensuite, le générateur tire une mécanique, deux mécaniques ou toutes les mécaniques déjà introduites, sans retirer les anciennes du tirage
+  * Le générateur construit un chemin de résolution, produit plusieurs mélanges candidats et privilégie les plateaux pleins et colorés plutôt que les gros blocs monochromes
+  * Le nombre de coups du chemin construit augmente progressivement avec le niveau ; il s'agit d'une solution connue, pas nécessairement du nombre minimal de coups
 
 # Features à ajouter progressivement au cours du développement du jeu :
 ## Règles générales et règles particulières (implémenté)
@@ -29,8 +35,8 @@
 
 ## Mécaniques de jeu :
 
-### Mélange de fiole
-* Un bouton "mélanger" sous forme de smiley se trouve sous le board de jeu
+### Mélange de fiole (implémenté)
+* Un bouton "mélanger" sous forme d'une émoticone "mélange" se trouve sous le board de jeu
 * Ce bouton est disponible à tout moment lorsque la partie est en cours et lorsqu'elle est perdue
 * En cas de défaite, le bouton est disponible à côté de celui de la fiole bonus et du bouton "recommencer"
 * Le joueur peu cliquer sur le bouton, puis sélectionner une fiole non verrouillée 
@@ -39,7 +45,7 @@
 * A l'issue du mélange, le jeu recalcule la possibilité de victoire et annonce la défaite s'il n'est pas possible de gagner depuis la nouvelle configuration
 * Après une défaite, s'il n'est pas possible de gagner la partie en mélangeant une fiole (exemple : impossibilité de dégeler une fiole de glace), le bouton ne doit pas être proposé
 
-### La couleur mystère
+### La couleur mystère (implémenté)
 * Tous les types de fioles peuvent contenir des couleurs mystères en début de partie.
 * Cette couleur mystère doit être facilement identifiable grâce à une étiquette "?" placée sur elle.
 * Une même fiole ne peut pas contenir plus de 2 couleurs mystères simultanément.
@@ -78,7 +84,7 @@
 * Il peut y avoir 0, 1 ou plusieurs fioles cachées dans une même partie tant que cette dernière est résolvable
 * Si plusieurs fioles cachées apparaissent dans un même niveau, elles peuvent avoir la même étiquette ou des étiquettes différentes
 
-### La fiole géante
+### La fiole géante (implémenté)
 * Une fiole géante ne peut être que destination et jamais source
 * Une fiole géante est vide en début de partie
 * Elle est de hauteur et de capacité de 2 ou 3 fioles
@@ -88,7 +94,7 @@
 * Les parties contenant une fiole géante ne peuvent être gagnées que si la fiole géante est remplie
 * Une fiole géante ne peut jamais être gelée, masquée ou en boîte
 
-### La fiole source conditionnelle
+### La fiole source conditionnelle (implémenté)
 * Elle est remplie en début de partie, de manière aléatoire
 * Elle comporte une étiquette de couleur qui ne devra pas être confondue avec celle des fioles cachées
 * Elle peut être source sans restriction

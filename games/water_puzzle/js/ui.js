@@ -11,7 +11,8 @@ import {
     onGameStateChange
 } from "./game.js";
 import {
-    canMixTube
+    canMixTube,
+    getTubeCapacity
 } from "./rules.js";
 
 import { initGameShell } from "../../../common/ui/game-shell.js";
@@ -96,7 +97,7 @@ export function initUI(nextLevelCallback) {
         helpItems: [
             "Touchez une fiole, puis une autre pour y verser la couleur du dessus.",
             "Une fiole ne peut recevoir que la même couleur ou être vide. Le jeu verse autant de couches identiques que possible dans la place disponible.",
-            "Une fiole pleine et monochrome est terminée et ne peut plus être utilisée.",
+            "Une fiole pleine et monochrome est terminée et ne peut plus être utilisée. Une fiole géante doit aussi être entièrement remplie d'une seule couleur pour gagner.",
             "Triez toutes les couleurs pour terminer le niveau.",
             "Après une défaite, une fiole bonus d'une case est proposée uniquement si elle permet encore de résoudre le niveau.",
             "Le bouton smiley permet de mélanger une fiole non verrouillée. Certaines couches marquées ? cachent leur couleur jusqu'à ce qu'elles soient révélées.",
@@ -625,6 +626,37 @@ function renderBoard(state) {
                 `tube-${tube.type}`
             );
 
+            if (tube.type === "giant") {
+                tubeElement.style.setProperty(
+                    "--tube-height-scale",
+                    String(
+                        getTubeCapacity(tube, state.capacity) /
+                        state.capacity
+                    )
+                );
+                tubeElement.style.setProperty(
+                    "--tube-capacity",
+                    String(
+                        getTubeCapacity(tube, state.capacity)
+                    )
+                );
+                tubeElement.style.setProperty(
+                    "--tube-grid-row-start",
+                    "1"
+                );
+                tubeElement.style.setProperty(
+                    "--tube-grid-column-start",
+                    "5"
+                );
+                tubeElement.style.setProperty(
+                    "--tube-grid-row-span",
+                    String(
+                        getTubeCapacity(tube, state.capacity) /
+                        state.capacity
+                    )
+                );
+            }
+
             tubeElement.classList.toggle(
                 "tube-bonus",
                 tube.isBonus === true
@@ -716,6 +748,13 @@ function renderBoard(state) {
                         );
                     }
                 );
+
+                if (tube.type === "conditional") {
+                    renderConditionalTarget(
+                        tubeElement,
+                        tube.targetColor
+                    );
+                }
             }
 
             /*
@@ -743,7 +782,9 @@ function getTubeLabel(tube, index) {
         normal: "classique",
         stone: "de pierre, inutilisable comme source",
         frozen: "gelée, bloquée",
-        hidden: "cachée"
+        hidden: "cachée",
+        conditional: "source conditionnelle",
+        giant: "géante, destination uniquement"
     };
 
     const colors = tube.type === "hidden"
@@ -763,7 +804,11 @@ function getTubeLabel(tube, index) {
 
     const typeName = tube.isBonus
         ? "bonus, capacité 1 case"
-        : typeNames[tube.type] ?? "spéciale";
+        : tube.type === "conditional"
+            ? `${typeNames[tube.type]}, accepte ${getColorName(tube.targetColor)}`
+            : tube.type === "giant"
+                ? `${typeNames[tube.type]}, capacité ${tube.capacity}`
+                : typeNames[tube.type] ?? "spéciale";
 
     return `Fiole ${index + 1}, ${typeName}, ${colors}`;
 }
@@ -774,7 +819,9 @@ function getTubeMarker(type) {
     return {
         stone: "◆",
         frozen: "❄",
-        hidden: "✦"
+        hidden: "✦",
+        conditional: "⇢",
+        giant: "↥"
     }[type] ?? "";
 }
 
@@ -790,13 +837,17 @@ function renderSpecialLegend(state) {
     const labels = {
         stone: "Pierre",
         frozen: "Gelée",
-        hidden: "Cachée"
+        hidden: "Cachée",
+        conditional: "Source conditionnelle",
+        giant: "Géante"
     };
 
     const descriptions = {
         stone: "Vide au début, une fiole de pierre ne peut jamais servir de source, mais peut recevoir des couleurs.",
         frozen: "Bloquée comme source et destination jusqu'à ce qu'une fiole pleine et monochrome immédiatement voisine, sur la même rangée, la dégèle.",
-        hidden: "Son contenu est masqué jusqu'à ce qu'une fiole pleine et monochrome de la couleur cible apparaisse sur le plateau."
+        hidden: "Son contenu est masqué jusqu'à ce qu'une fiole pleine et monochrome de la couleur cible apparaisse sur le plateau.",
+        conditional: "Elle peut toujours servir de source, mais ne reçoit que la couleur indiquée sur son étiquette.",
+        giant: "Vide au début, elle ne peut servir que de destination. Il faut la remplir entièrement d'une seule couleur pour gagner."
     };
 
     specialLegendElement.replaceChildren();
@@ -969,6 +1020,34 @@ function renderHiddenTarget(
     label.setAttribute(
         "aria-label",
         `Couleur cible : ${getColorName(targetColor)}`
+    );
+
+    tubeElement.appendChild(
+        label
+    );
+}
+
+
+function renderConditionalTarget(
+    tubeElement,
+    targetColor
+) {
+
+    const label =
+        document.createElement("span");
+
+    label.className =
+        "conditional-target-label";
+
+    label.textContent =
+        `→ ${getColorName(targetColor)}`;
+
+    label.dataset.color =
+        targetColor ?? "";
+
+    label.setAttribute(
+        "aria-label",
+        `N'accepte que la couleur ${getColorName(targetColor)}`
     );
 
     tubeElement.appendChild(

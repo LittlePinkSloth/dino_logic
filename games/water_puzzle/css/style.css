@@ -126,6 +126,8 @@ h1 {
  */
 
 .board {
+    --tube-base-height: 213px;
+
     width: min(100%, 900px);
 
     min-height: 280px;
@@ -137,6 +139,7 @@ h1 {
     display: grid;
 
     grid-template-columns: repeat(5, minmax(0, 62px));
+    grid-auto-rows: minmax(var(--tube-base-height), auto);
     justify-content: center;
     align-items: end;
 
@@ -168,6 +171,8 @@ h1 {
 @media (max-width: 520px) {
 
     .board {
+        --tube-base-height: 160px;
+
         max-width: 400px;
 
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -415,6 +420,44 @@ h1 {
 
 /*
  * ============================================================
+ * FIOLE GÉANTE
+ * ============================================================
+ */
+
+.tube.tube-giant {
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
+    grid-column: var(--tube-grid-column-start);
+    grid-row:
+        var(--tube-grid-row-start) /
+        span var(--tube-grid-row-span);
+
+    border-color: #b18a4a;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 250, 231, 0.9),
+            rgba(255, 239, 190, 0.46) 48%,
+            rgba(255, 249, 225, 0.82)
+        );
+}
+
+.tube.tube-giant .water {
+    height: calc(100% / var(--tube-capacity));
+}
+
+@media (max-width: 520px) {
+
+    .tube.tube-giant {
+        height: auto;
+    }
+}
+
+
+/*
+ * ============================================================
  * COULEUR CIBLE DE LA FIOLE CACHÉE
  * ============================================================
  */
@@ -496,6 +539,60 @@ h1 {
 }
 
 .hidden-target-label[data-color="orange"] {
+    background-color: #ee9650;
+    color: #4a3000;
+    text-shadow: none;
+}
+
+.conditional-target-label {
+    position: absolute;
+
+    z-index: 2;
+
+    top: 8px;
+    left: 50%;
+
+    padding: 3px 5px;
+
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 999px;
+
+    color: #fff;
+
+    font-size: 7px;
+    font-weight: 800;
+    line-height: 1.2;
+    white-space: nowrap;
+
+    pointer-events: none;
+
+    transform: translateX(-50%);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.conditional-target-label[data-color="red"] {
+    background-color: #ef6461;
+}
+
+.conditional-target-label[data-color="blue"] {
+    background-color: #5b8def;
+}
+
+.conditional-target-label[data-color="green"] {
+    background-color: #61b56b;
+}
+
+.conditional-target-label[data-color="yellow"] {
+    background-color: #f2c94c;
+    color: #4a3000;
+    text-shadow: none;
+}
+
+.conditional-target-label[data-color="purple"] {
+    background-color: #8f63c2;
+}
+
+.conditional-target-label[data-color="orange"] {
     background-color: #ee9650;
     color: #4a3000;
     text-shadow: none;
@@ -617,6 +714,14 @@ h1 {
 
 .marker-hidden {
     color: #704779;
+}
+
+.marker-conditional {
+    color: #3979b8;
+}
+
+.marker-giant {
+    color: #9a712e;
 }
 
 .special-legend-item {
@@ -755,10 +860,10 @@ h1 {
     height: 50px;
     padding: 7px;
 
-    border: 1px solid #a875b6;
+    border: 1px solid #e3ecf0;
     border-radius: 50%;
 
-    background: #bd8acb;
+    background: #cfdde6;
     color: #fff;
 
     font: inherit;
@@ -773,11 +878,11 @@ h1 {
 
 .mix-tube-button:hover {
     transform: translateY(-2px);
-    background: #a875b6;
+    background: #75a7b6;
 }
 
 .mix-tube-button.is-armed {
-    box-shadow: 0 0 0 4px rgba(168, 117, 182, 0.25);
+    box-shadow: 0 0 0 4px rgba(117, 158, 182, 0.25);
 }
 
 .bottle-smiley {
@@ -1229,6 +1334,8 @@ h1 {
 
 
     .board {
+        --tube-base-height: 160px;
+
         width: 100%;
 
         min-height: 0;
@@ -1344,6 +1451,8 @@ h1 {
 @media (max-width: 360px) {
 
     .board {
+        --tube-base-height: 188px;
+
         padding:
             18px
             5px;

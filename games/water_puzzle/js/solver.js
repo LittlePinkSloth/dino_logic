@@ -1,6 +1,9 @@
 /* solver.js */
 import {
     areSameRowNeighbors,
+    canBeDestination,
+    canBeSource,
+    canUnlockOtherTubes,
     getTubeCapacity,
     isMonochromeFull,
     isTubeClosed,
@@ -92,18 +95,30 @@ function normalizeTubes(tubes) {
 
 function serializeState(tubes) {
 
-    return tubes
-        .map(
+    const serializedTubes =
+        tubes.map(
             tube =>
-                [
+                JSON.stringify([
                     tube.type,
                     tube.targetColor ?? "",
-                    tube.layers.join(","),
-                    tube.mysteryLayers.map(
-                        isMystery => isMystery ? "1" : "0"
-                    ).join("")
-                ].join(":")
+                    tube.capacity ?? null,
+                    tube.isBonus === true,
+                    tube.layers,
+                    tube.mysteryLayers
+                ])
+        );
+
+    if (
+        tubes.some(
+            tube =>
+                tube.type === "frozen"
         )
+    ) {
+        return serializedTubes.join("|");
+    }
+
+    return serializedTubes
+        .sort()
         .join("|");
 }
 
@@ -121,6 +136,10 @@ function isTubeSolved(
 
     const layers =
         tube.layers;
+
+    if (tube.type === "giant") {
+        return isMonochromeFull(tube, capacity);
+    }
 
     if (
         layers.length === 0
@@ -220,9 +239,7 @@ function hasFullTubeOfColor(
         const tube =
             tubes[index];
 
-        if (
-            tube.type !== "normal"
-        ) {
+        if (!canUnlockOtherTubes(tube)) {
             continue;
         }
 
@@ -250,7 +267,7 @@ function hasMonochromeFullNeighbor(
 
     return tubes.some(
         (candidate, candidateIndex) =>
-            candidate.type === "normal" &&
+            canUnlockOtherTubes(candidate) &&
             areSameRowNeighbors(index, candidateIndex) &&
             isTubeMonochromeFull(
                 candidate,
@@ -414,9 +431,7 @@ export function getPossibleMoves(
 
         if (
             source.layers.length === 0 ||
-            source.type === "stone" ||
-            source.type === "frozen" ||
-            source.type === "hidden" ||
+            !canBeSource(source) ||
             isTubeClosed(source, capacity)
         ) {
             continue;
@@ -464,8 +479,7 @@ export function getPossibleMoves(
                 );
 
             if (
-                target.type === "frozen" ||
-                target.type === "hidden" ||
+                !canBeDestination(target, sourceColor) ||
                 isTubeClosed(target, capacity) ||
                 target.layers.length >= targetCapacity
             ) {
@@ -614,7 +628,8 @@ export function solveLevel(
     capacity = DEFAULT_CAPACITY,
     {
         maxMoves = DEFAULT_MAX_SOLUTION_MOVES,
-        returnPath = true
+        returnPath = true,
+        maxNodes = Infinity
     } = {}
 ) {
 
@@ -701,6 +716,9 @@ export function solveLevel(
                 capacity
             );
 
+        const nextStates =
+            new Set();
+
         for (
             const move of possibleMoves
         ) {
@@ -721,6 +739,14 @@ export function solveLevel(
                 );
 
             if (
+                nextStates.has(stateKey)
+            ) {
+                continue;
+            }
+
+            nextStates.add(stateKey);
+
+            if (
                 visited.has(stateKey)
             ) {
                 continue;
@@ -729,6 +755,16 @@ export function solveLevel(
             visited.add(
                 stateKey
             );
+
+            if (visited.size > maxNodes) {
+                return {
+                    solved: false,
+                    moves: null,
+                    path: [],
+                    nodes: visited.size,
+                    truncated: true
+                };
+            }
 
             if (
                 returnPath
