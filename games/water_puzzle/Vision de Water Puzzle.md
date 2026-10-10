@@ -34,6 +34,20 @@
 * Les fioles bonus ne sont jamais considérées comme pleines et ne sont jamais fermées : elles restent source/destination jusqu'à résolution du niveau
 
 ## Mécaniques de jeu :
+### Challenge Prestige
+* une fois tous les 10 niveaux, le jeu propose un niveau Prestige
+* la difficulté du niveau est la même que la difficulté actuelle atteinte par le joueur
+* la couleur du board change vers une couleur plus chaude qui indique le passage sur un niveau prestige
+* aucune bonus n'est disponible
+* le jeu affiche le nombre de coups minimal (meilleure résolution possible) pour remplir le niveau, et le nombre de coups "cible" pour le joueur, qui est = (nombre de coups minimal)*1.10 
+* à chaque coup joué par le joueur, son compteur de coup est incrémenté de 1 afin qu'il ait en permanence conscience de sa progression
+* si le joueur dépasse le nombre de coups cible sans avoir résolu le niveau, le niveau est perdu et il doit le recommencer jusqu'à sa bonne résolution dans le nombre de coups imparti
+
+### Statistique de résolution parfaite
+* une nouvelle statistique est ajoutée aux statistiques du jeu : le nombre de partie "parfaite", réalisées grâce au nombre minimal de coup
+* cette statistique est ajoutée suite à l'ajout du challenge prestige
+* tous les niveaux résolus (prestige ou non) peuvent incrémenter cette nouvelle statistique si le joueur réalise le niveau dans le nombre minimal de coup possible
+* en dehors des niveaux prestige, le nombre minimal de coup n'est pas indiqué à l'utilisateur, mais il peut tout de même réaliser le niveau avec ce nombre minimal "par hasard", ce qui incrémente sa statistique
 
 ### Mélange de fiole (implémenté)
 * Un bouton "mélanger" sous forme d'une émoticone "mélange" se trouve sous le board de jeu
