@@ -22,10 +22,19 @@
       "id": "water_puzzle",
       "name": "Water Puzzle",
       "description": "Triez les couleurs dans les fioles et relevez les défis spéciaux.",
-      "version": "0.11.1",
+      "version": "1.0.0",
       "path": "games/water_puzzle/",
       "entry": "games/water_puzzle/index.html",
       "icon": "games/water_puzzle/assets/icons/water-puzzle.svg"
+    },
+    {
+      "id": "flash_cards",
+      "name": "Flash Cards",
+      "description": "Révisez à votre rythme avec des cartes et des rappels espacés.",
+      "version": "1.0.0",
+      "path": "games/flash_cards/",
+      "entry": "games/flash_cards/index.html",
+      "icon": "games/flash_cards/assets/icon.svg"
     }
   ]
 }

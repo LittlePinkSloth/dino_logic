@@ -1,0 +1,17 @@
+{
+  "id": "flash_cards",
+  "name": "Flash Cards",
+  "version": "1.0.0",
+  "description": "Révisez à votre rythme avec des cartes et des rappels espacés.",
+  "icon": "assets/icon.svg",
+  "files": [
+    "index.html",
+    "game.json",
+    "game.js",
+    "style.css",
+    "assets/icon.svg",
+    "assets/bib_model.json",
+    "assets/bibliotheques/index.json",
+    "assets/bibliotheques/decouvertes.json"
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "nom": "Petites découvertes",
+  "domaines": ["Sciences", "Culture générale"],
+  "date": "2026-10-12",
+  "cartesListe": [
+    {
+      "recto": "Quelle planète est surnommée la planète rouge ?",
+      "verso": "Mars",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le plus grand océan de la Terre ?",
+      "verso": "L'océan Pacifique",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Combien de côtés possède un hexagone ?",
+      "verso": "Six",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel gaz les plantes absorbent-elles principalement pour la photosynthèse ?",
+      "verso": "Le dioxyde de carbone (CO₂)",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le résultat de 9 × 7 ?",
+      "verso": "63",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Sur quel continent se trouve le désert du Sahara ?",
+      "verso": "En Afrique",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle étoile est la plus proche de la Terre ?",
+      "verso": "Le Soleil",
+      "date": "2026-10-12",
+      "memorisee": 0
+    },
+    {
+      "recto": "Combien de minutes y a-t-il dans deux heures ?",
+      "verso": "120 minutes",
+      "date": "2026-10-12",
+      "memorisee": 0
+    }
+  ]
+}

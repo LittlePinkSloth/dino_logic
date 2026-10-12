@@ -157,7 +157,7 @@
         transform: translate(-50%, -50%) rotate(var(--angle)) translateY(var(--distance)) scale(1);
     }
 }
-
+ 
 @media (prefers-reduced-motion: reduce) {
     .rules-popup,
     .records-popup {

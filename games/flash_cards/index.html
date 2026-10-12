@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#f3f5f2">
+    <meta name="description" content="Révisez à votre rythme avec des cartes et des rappels espacés.">
+    <title>Flash Cards · Little Pink Sloth</title>
+    <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../common/styles/common.css">
+</head>
+<body>
+    <main class="flash-app">
+        <header class="app-header">
+            <p class="eyebrow">LITTLE PINK SLOTH</p>
+            <h1>Flash <span>Cards</span></h1>
+            <p class="intro">De petites révisions, à votre rythme.</p>
+        </header>
+
+        <button id="settings-open" class="settings-open" type="button" aria-label="Ouvrir la configuration" title="Configuration">⚙</button>
+
+        <section id="home-screen" class="screen" aria-labelledby="library-heading">
+            <div class="section-heading">
+                <div>
+                    <h2 id="library-heading">Votre bibliothèque</h2>
+                    <p id="library-count" class="subtle"></p>
+                </div>
+                <button id="start-session" class="primary-button" type="button">Commencer</button>
+            </div>
+
+            <label class="search-field">
+                <span class="visually-hidden">Rechercher une bibliothèque</span>
+                <input id="library-search" type="search" placeholder="Rechercher une bibliothèque…" autocomplete="off">
+            </label>
+
+            <div class="library-tools">
+                <fieldset class="sort-picker">
+                    <legend>Trier par</legend>
+                    <label><input type="radio" name="sort" value="name" checked> Nom</label>
+                    <label><input type="radio" name="sort" value="domain"> Domaine</label>
+                </fieldset>
+                <button id="import-open" class="quiet-button" type="button">Importer des cartes</button>
+            </div>
+
+            <div id="domain-filters" class="domain-filters" aria-label="Filtrer par domaine"></div>
+            <div id="library-list" class="library-list"></div>
+            <p id="app-message" class="app-message" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="review-screen" class="screen" aria-labelledby="review-heading" hidden>
+            <div class="review-topline">
+                <button id="leave-session" class="text-button" type="button">← Bibliothèques</button>
+                <p id="review-progress" class="subtle"></p>
+            </div>
+            <h2 id="review-heading" class="visually-hidden">Révision</h2>
+            <button id="flash-card" class="flash-card" type="button" aria-label="Afficher l'autre côté de la carte">
+                <span id="card-side" class="card-side">RECTO</span>
+                <span id="card-text" class="card-text"></span>
+                <span id="flip-hint" class="flip-hint">Touchez la carte pour la retourner</span>
+            </button>
+            <div id="answer-actions" class="answer-actions" hidden>
+                <button id="answer-no" class="answer-button answer-no" type="button">À revoir</button>
+                <button id="answer-yes" class="answer-button answer-yes" type="button">Je savais</button>
+            </div>
+        </section>
+
+        <section id="results-screen" class="screen results-screen" aria-labelledby="results-heading" hidden>
+            <p class="eyebrow">BRAVO POUR CETTE SESSION</p>
+            <h2 id="results-heading">C'est dans la boîte.</h2>
+            <div class="result-card">
+                <p><strong id="result-known">0</strong><span>cartes connues</span></p>
+                <p><strong id="result-total">0</strong><span>cartes révisées</span></p>
+                <p><strong id="result-percent">0 %</strong><span>de réussite</span></p>
+            </div>
+            <p id="save-confirmation" class="save-confirmation" role="status" aria-live="polite"></p>
+            <div class="result-actions">
+                <button id="retry-save" class="quiet-button" type="button" hidden>Réessayer la sauvegarde</button>
+                <button id="return-home" class="primary-button" type="button">Retour aux bibliothèques</button>
+            </div>
+        </section>
+    </main>
+
+    <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-heading">
+        <form method="dialog" class="dialog-close-row">
+            <button class="dialog-close" aria-label="Fermer la configuration">×</button>
+        </form>
+        <h2 id="settings-heading">Configuration</h2>
+        <section class="settings-section">
+            <h3>Dossier de bibliothèques</h3>
+            <p id="folder-status" class="subtle">Bibliothèques intégrées à l'application.</p>
+            <div class="settings-actions">
+                <button id="choose-directory" class="quiet-button" type="button">Choisir un dossier</button>
+                <button id="reset-directory" class="text-button" type="button">Utiliser les bibliothèques intégrées</button>
+            </div>
+            <label class="file-picker-label" for="json-import">Importer des fichiers JSON</label>
+            <input id="json-import" class="file-picker" type="file" accept=".json,application/json" multiple>
+            <p class="fine-print">Le navigateur ne donne pas accès à un chemin saisi au clavier. Le dossier choisi est mémorisé si le navigateur autorise la conservation de son accès ; sinon, les imports restent enregistrés sur cet appareil.</p>
+        </section>
+        <section class="settings-section">
+            <h3>Volume d'une session</h3>
+            <label class="setting-line"><span>Nombre de cartes</span><input id="session-size" type="number" min="1" max="500" value="15"></label>
+            <label class="setting-line setting-checkbox"><input id="all-cards" type="checkbox"><span>Réviser toutes les cartes sélectionnées</span></label>
+        </section>
+        <section class="settings-section">
+            <h3>Modèle de bibliothèque</h3>
+            <p class="subtle">Utilisez ce fichier JSON comme base pour créer vos propres cartes.</p>
+            <a class="download-link" href="assets/bib_model.json" download="bib_model.json">Télécharger le modèle JSON</a>
+        </section>
+        <section class="settings-section">
+            <h3>Exporter vos bibliothèques</h3>
+            <p class="subtle">Télécharge les bibliothèques actuellement chargées, avec les révisions enregistrées.</p>
+            <button id="export-libraries" class="quiet-button" type="button">Exporter les bibliothèques</button>
+        </section>
+        <p id="settings-message" class="app-message" role="status" aria-live="polite"></p>
+    </dialog>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>

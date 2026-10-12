@@ -35,6 +35,7 @@ LittlePinkSloth/
     ├── dino_logic/
     ├── sudoku/
     ├── water_puzzle/
+    ├── flash_cards/
     └── 1080/
 ````
 
@@ -1391,5 +1392,4 @@ JEU
 `common/` est donc une **dépendance partagée**, pas une bibliothèque copiée dans chaque jeu.
 
 Toute ressource commune utilisée doit rester disponible offline via le cache commun.
-
 

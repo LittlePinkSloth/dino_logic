@@ -912,7 +912,7 @@ function renderSpecialLegend(state) {
             marker,
             label
         );
-
+ 
         const tooltip =
             document.createElement("span");
 
