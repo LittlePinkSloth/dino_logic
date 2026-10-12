@@ -1,13 +1,13 @@
 {
     "nom" : "Exemple",
     "domaines" : ["Mathématiques", "Informatique"],
-    "date" : "2026-10-08",
+    "date" : "1900-01-01",
     "cartesListe" : [
         {
             "recto" : "a²+b²",
             "verso" : "(a+b)² - 2ab", 
-            "date" : "2026-10-08",
-            "memorisee" : 5
+            "date" : "1900-01-01",
+            "memorisee" : 0
         },
         {
             "recto" : "Date modèle Transformer IA",

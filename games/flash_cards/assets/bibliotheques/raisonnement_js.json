@@ -1,0 +1,53 @@
+{
+  "nom": "Méthode de conception JavaScript",
+  "domaines": [
+    "Informatique",
+    "JavaScript",
+    "Architecture logicielle"
+  ],
+  "date": "1900-01-01",
+  "cartesListe": [
+    {
+      "recto": "En conception JS, que signifie 'isoler les variables mutables' ?",
+      "verso": "Identifier les données brutes qui vont évoluer au fil de l'utilisation (score, ID courant...), de manière totalement indépendante de l'affichage HTML.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'un 'macro-état' dans une architecture web ?",
+      "verso": "Une phase strictement distincte du cycle de vie dans laquelle l'application peut se trouver (ex : ACCUEIL, CHARGEMENT, JEU_EN_COURS).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre un événement physique et un événement système ?",
+      "verso": "L'événement physique est déclenché par une interaction de l'utilisateur (clic, swipe), l'événement système survient en arrière-plan sans action humaine (fin d'un timer, retour d'une API).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Comment modéliser visuellement le flux d'une application événementielle ?",
+      "verso": "En dessinant un graphe d'états : des cercles représentant les macro-états, reliés par des flèches représentant les événements déclencheurs (et non un organigramme séquentiel descendant).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le rôle de la 'logique de transition' ?",
+      "verso": "Définir quelles mutations exactes doivent subir les données du modèle lorsqu'un événement spécifique est déclenché.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle doit être la relation entre l'état en mémoire et l'interface (DOM) ?",
+      "verso": "L'interface graphique est une simple surcouche agnostique : elle se contente d'observer l'état en mémoire et de s'adapter pour en être le reflet exact.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Lors d'un rendu visuel, pourquoi l'étape de 'nettoyage' est-elle indispensable ?",
+      "verso": "Pour éviter les fuites de mémoire et les superpositions d'affichage : il faut effacer, vider ou désactiver les éléments HTML de l'état A avant de générer ceux de l'état B.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    }
+  ]
+}

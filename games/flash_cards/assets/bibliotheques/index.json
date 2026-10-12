@@ -1,5 +1,7 @@
 {
   "files": [
-    "decouvertes.json"
+    "raisonnement_js.json",
+    "cybersecurite_l3.json",
+    "cloud_computing.json"
   ]
 }

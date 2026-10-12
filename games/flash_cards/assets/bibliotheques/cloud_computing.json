@@ -1,0 +1,226 @@
+{
+  "nom": "Plateformes Cloud, Virtualisation et Conteneurs",
+  "domaines": [
+    "Informatique",
+    "Cloud Computing"
+  ],
+  "date": "1900-01-01",
+  "cartesListe": [
+    {
+      "recto": "Qu'est-ce que le cloud computing (selon le NIST) ?",
+      "verso": "C'est un modèle qui permet un accès pratique et à la demande, par le réseau, à un ensemble partagé de ressources informatiques configurables.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelles sont les 5 caractéristiques essentielles du cloud selon le NIST ?",
+      "verso": "1. Libre-service à la demande, 2. Accès par le réseau, 3. Mutualisation des ressources, 4. Élasticité rapide, 5. Service mesuré.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre IaaS, PaaS et SaaS ?",
+      "verso": "IaaS = infrastructure gérée par le fournisseur. PaaS = plateforme (environnement d'exécution) gérée par le fournisseur. SaaS = application logicielle complète gérée par le fournisseur.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que le label SecNumCloud en France ?",
+      "verso": "Une qualification de l'ANSSI pour les offres cloud répondant à un référentiel exigeant de sécurité et garantissant une immunité aux lois extra-européennes (comme le CLOUD Act).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'une machine virtuelle (VM) ?",
+      "verso": "Un ordinateur simulé par logiciel, avec ses propres processeurs virtuels (vCPU), mémoire et système d'exploitation invité isolé.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre un hyperviseur de type 1 et de type 2 ?",
+      "verso": "Le type 1 (natif) s'exécute directement sur le matériel (ex: KVM, ESXi). Le type 2 s'exécute sur un système d'exploitation classique (ex: VirtualBox, Docker Desktop).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que la surallocation (overcommitment) en virtualisation ?",
+      "verso": "Le fait d'attribuer plus de ressources virtuelles (ex : vCPU) aux machines virtuelles qu'il n'y a de ressources physiques réelles disponibles sur le serveur hôte.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "En quoi un conteneur diffère-t-il d'une machine virtuelle ?",
+      "verso": "Un conteneur virtualise uniquement le système d'exploitation et partage le noyau de l'hôte, le rendant plus léger. La VM virtualise tout le matériel et intègre son propre noyau.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "À quoi servent les namespaces et cgroups sous Linux pour les conteneurs ?",
+      "verso": "Les namespaces (espaces de noms) isolent la vue du système (PID, réseau). Les cgroups (groupes de contrôle) limitent et comptabilisent les ressources utilisées (CPU, mémoire).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "À quoi sert un fichier Dockerfile ?",
+      "verso": "Il décrit la construction d'une image de conteneur en listant des instructions étape par étape (FROM, COPY, RUN, CMD).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Comment conserver les données persistantes d'un conteneur éphémère ?",
+      "verso": "En utilisant un volume (géré par le moteur de conteneurs) ou en montant un répertoire de la machine hôte (bind mount).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le rôle de Docker Compose ?",
+      "verso": "Décrire et gérer une application multi-conteneurs pour une seule machine via un fichier YAML unique (compose.yaml).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que Kubernetes ?",
+      "verso": "Un orchestrateur de conteneurs qui gère le placement, la réparation, et la mise à l'échelle d'applications sur une grappe (cluster) de machines.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'un Pod dans Kubernetes ?",
+      "verso": "La plus petite unité de déploiement de Kubernetes, contenant un ou plusieurs conteneurs partageant la même adresse IP et les mêmes volumes.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "À quoi sert un objet Service dans Kubernetes ?",
+      "verso": "À fournir un point d'accès stable (adresse IP et nom DNS internes) qui répartit le trafic réseau vers les Pods cibles.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre une sonde liveness et readiness dans Kubernetes ?",
+      "verso": "Readiness (disponibilité) vérifie si le pod est prêt à recevoir du trafic. Liveness (vie) vérifie si l'application fonctionne, redémarrant le conteneur en cas d'échec.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelles sont les différences entre le stockage bloc, fichier et objet ?",
+      "verso": "Bloc = disque virtuel attaché à une seule instance. Fichier = arborescence réseau partagée (NFS/SMB). Objet = données et métadonnées stockées dans des seaux via API HTTP.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'une URL pré-signée pour le stockage objet ?",
+      "verso": "Une URL générée par l'application intégrant une signature cryptographique temporaire, permettant à un tiers de lire ou déposer un objet privé sans authentifiant direct.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Que dit le théorème CAP pour les systèmes de bases de données répartis ?",
+      "verso": "En cas de partitionnement du réseau (P), il est impossible d'avoir à la fois la Cohérence stricte (C) et la Disponibilité totale (A) des données. Il faut faire un choix (CP ou AP).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre les concepts de RPO et RTO en sauvegarde ?",
+      "verso": "RPO (Recovery Point Objective) : quantité maximale de données que l'on accepte de perdre (en durée). RTO (Recovery Time Objective) : durée maximale acceptable d'interruption du service.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'un réseau VPC (Virtual Private Cloud) ?",
+      "verso": "Un réseau virtuel privé, isolé et défini par logiciel dans le cloud, que le client découpe en sous-réseaux et configure avec ses propres plages d'adresses privées (CIDR).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle différence fondamentale entre un sous-réseau public et privé ?",
+      "verso": "Un sous-réseau public possède une route vers une passerelle Internet (IGW). Un sous-réseau privé n'en a pas et utilise généralement une passerelle NAT pour le trafic sortant.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'un groupe de sécurité (Security Group) ?",
+      "verso": "Un pare-feu virtuel appliqué au niveau de l'interface réseau, à états (stateful), qui contrôle le trafic entrant et sortant via des règles d'autorisation explicites.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "À quoi sert un CDN (Content Delivery Network) ?",
+      "verso": "C'est un réseau mondial de serveurs qui met en cache les contenus au plus près des utilisateurs pour réduire la latence, diminuer les coûts de transfert sortant et absorber les attaques.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quels sont les principes de l'Infrastructure en tant que Code (IaC) ?",
+      "verso": "Décrire l'infrastructure de manière déclarative, idempotente et versionnée dans des fichiers textes (ex: avec OpenTofu/Terraform) permettant la reproductibilité.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le rôle du fichier d'état dans OpenTofu/Terraform (tfstate) ?",
+      "verso": "Il associe chaque ressource de la configuration au code avec l'objet réel correspondant déployé chez le fournisseur. Il est critique et peut contenir des secrets.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que l'approche GitOps ?",
+      "verso": "Une méthode où le dépôt Git est la seule source de vérité pour l'état souhaité de l'infrastructure, et où un agent interne synchronise en permanence l'état réel pour le faire converger.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce qu'une application \"sans état\" (stateless) ?",
+      "verso": "Une application où aucune copie locale ne conserve d'informations (état ou session) entre deux requêtes, permettant une élasticité horizontale fluide.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelle est la différence entre une Région et une Zone de disponibilité ?",
+      "verso": "Une région est une zone géographique globale. Une zone de disponibilité est un sous-ensemble d'une région composé de un ou plusieurs centres de données indépendants.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Que signifient les acronymes SLI, SLO et SLA ?",
+      "verso": "SLI : mesure de qualité vue par l'utilisateur. SLO : valeur cible visée pour l'indicateur. SLA : engagement contractuel commercial assorti de pénalités.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quelles sont les caractéristiques du modèle Serverless ?",
+      "verso": "Le client ne gère aucun serveur, la mise à l'échelle est totalement automatique (y compris jusqu'à zéro), et la facturation se fait à l'usage réel ultra-fin.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que le \"démarrage à froid\" (cold start) dans le Serverless / FaaS ?",
+      "verso": "Le délai nécessaire à la plateforme pour provisionner, charger l'environnement et lancer une nouvelle instance de fonction en l'absence d'instance disponible.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Quel est le rôle du chiffrement d'enveloppe dans la gestion des clés cloud (KMS) ?",
+      "verso": "Chiffrer chaque donnée avec une clé de donnée unique, puis chiffrer cette clé elle-même avec une clé maîtresse qui ne quitte jamais le KMS de manière matérielle (HSM).",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que le principe de \"moindre privilège\" (IAM) ?",
+      "verso": "S'assurer que chaque identité (utilisateur ou machine) ne possède que les droits strictement nécessaires pour accomplir ses tâches, pas plus.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Que représente la démarche FinOps dans le cloud ?",
+      "verso": "Une approche alliant finance, technique et métiers en 3 étapes continues (Informer, Optimiser, Opérer) pour rationaliser les dépenses et limiter le gaspillage cloud.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    },
+    {
+      "recto": "Qu'est-ce que la réversibilité dans le cloud ?",
+      "verso": "La capacité pour une entreprise de pouvoir quitter un fournisseur cloud pour un autre (ou revenir en interne) avec des délais, coûts et risques maîtrisés.",
+      "date": "1900-01-01",
+      "memorisee": 0
+    }
+  ]
+}
