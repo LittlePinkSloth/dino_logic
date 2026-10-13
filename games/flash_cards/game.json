@@ -1,7 +1,7 @@
 {
   "id": "flash_cards",
   "name": "Flash Cards",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Révisez à votre rythme avec des cartes et des rappels espacés.",
   "icon": "assets/icon.svg",
   "files": [

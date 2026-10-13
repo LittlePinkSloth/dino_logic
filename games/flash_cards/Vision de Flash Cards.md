@@ -49,6 +49,7 @@
 ### Interface de révision
 * La quasi intégralité de l'écran est occupée par le recto ou le verso de la carte
     * lorsque l'utilisateur clic ou touche cet espace, cela affiche le verso (ou le recto le cas échéant)
+    * un bouton haut-parleur lit à voix haute le texte de la face actuellement affichée
 * La partie basse de l'écran est occupée par deux boutons : OK/KO permettant d'indiquer si la carte est maîtrisée ou non
 * Ces boutons ne s'affichent qu'une fois les deux côtés de la carte ont été consultés
 * Dès qu'un des deux boutons est sélectionné :
@@ -80,4 +81,3 @@
 * C'est cet échantillon de cartes qui est réellement proposé à l'utilisateur pour sa session de révision
     
     
-

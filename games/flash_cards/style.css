@@ -140,6 +140,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 .review-topline { display: flex; align-items: center; justify-content: space-between; margin-bottom: 17px; }
 .review-topline .subtle { font-variant-numeric: tabular-nums; }
+.flash-card-container { position: relative; }
 .flash-card {
     display: flex;
     width: 100%;
@@ -157,6 +158,25 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
     cursor: pointer;
     box-shadow: 0 10px 28px #314f3e12;
 }
+.speak-card {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--green-dark);
+    cursor: pointer;
+    box-shadow: 0 2px 8px #28453712;
+}
+.speak-card:hover { background: var(--green-light); }
+.speak-card svg { width: 21px; height: 21px; fill: currentColor; }
+.speech-message { color: var(--muted); text-align: center; }
+.speech-message.error { color: var(--rose); }
 .card-side { color: var(--green); font-size: 10px; font-weight: 900; letter-spacing: .14em; }
 .card-text { max-width: 620px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(24px, 5vw, 38px); line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; }
 .flip-hint { color: #8b9890; font-size: 11px; }

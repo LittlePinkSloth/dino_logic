@@ -19,9 +19,11 @@ const elements = {
     start: document.querySelector("#start-session"),
     reviewProgress: document.querySelector("#review-progress"),
     flashCard: document.querySelector("#flash-card"),
+    speakCard: document.querySelector("#speak-card"),
     cardSide: document.querySelector("#card-side"),
     cardText: document.querySelector("#card-text"),
     flipHint: document.querySelector("#flip-hint"),
+    speechMessage: document.querySelector("#speech-message"),
     answerActions: document.querySelector("#answer-actions"),
     settingsDialog: document.querySelector("#settings-dialog"),
     settingsMessage: document.querySelector("#settings-message"),
@@ -383,17 +385,46 @@ function showScreen(screen) {
     document.querySelector("#settings-open").hidden = screen !== "home";
 }
 
+function stopSpeaking() {
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+}
+
+function speakCurrentCard() {
+    if (!("speechSynthesis" in window) || typeof window.SpeechSynthesisUtterance !== "function") {
+        setMessage(elements.speechMessage, "La synthèse vocale n'est pas disponible dans ce navigateur.", "error");
+        return;
+    }
+
+    const speech = new window.SpeechSynthesisUtterance(elements.cardText.textContent);
+    speech.lang = document.documentElement.lang || "fr-FR";
+    speech.onerror = event => {
+        if (event.error !== "canceled" && event.error !== "interrupted") {
+            setMessage(elements.speechMessage, `La lecture vocale a échoué : ${event.error}.`, "error");
+        }
+    };
+    window.speechSynthesis.cancel();
+    setMessage(elements.speechMessage, "");
+    try {
+        window.speechSynthesis.speak(speech);
+    } catch (error) {
+        setMessage(elements.speechMessage, `La lecture vocale a échoué : ${error.message}`, "error");
+    }
+}
+
 function renderCurrentCard() {
     const current = sessionCards[sessionIndex];
     const isBack = current.showingBack;
     elements.cardSide.textContent = isBack ? "VERSO" : "RECTO";
     elements.cardText.textContent = isBack ? current.card.verso : current.card.recto;
+    elements.speakCard.setAttribute("aria-label", `Lire le ${isBack ? "verso" : "recto"} à voix haute`);
     elements.flipHint.textContent = isBack ? "Touchez pour revoir le recto" : "Touchez la carte pour la retourner";
     elements.answerActions.hidden = !current.hasSeenBack;
     elements.reviewProgress.textContent = `Carte ${sessionIndex + 1} sur ${sessionCards.length}`;
+    setMessage(elements.speechMessage, "");
 }
 
 function beginSession() {
+    stopSpeaking();
     const entries = selectedCardEntries();
     if (!entries.length) {
         setMessage(elements.appMessage, "Sélectionnez au moins une bibliothèque ou un domaine avant de commencer.", "error");
@@ -587,14 +618,22 @@ document.querySelector("#settings-open").addEventListener("click", () => {
     elements.settingsDialog.showModal();
 });
 document.querySelector("#start-session").addEventListener("click", beginSession);
-document.querySelector("#leave-session").addEventListener("click", () => showScreen("home"));
-document.querySelector("#return-home").addEventListener("click", () => showScreen("home"));
+document.querySelector("#leave-session").addEventListener("click", () => {
+    stopSpeaking();
+    showScreen("home");
+});
+document.querySelector("#return-home").addEventListener("click", () => {
+    stopSpeaking();
+    showScreen("home");
+});
 document.querySelector("#retry-save").addEventListener("click", () => {
     if (pendingSave) persistSession();
 });
 document.querySelector("#answer-yes").addEventListener("click", () => answerCurrent(true));
 document.querySelector("#answer-no").addEventListener("click", () => answerCurrent(false));
+elements.speakCard.addEventListener("click", speakCurrentCard);
 elements.flashCard.addEventListener("click", () => {
+    stopSpeaking();
     const current = sessionCards[sessionIndex];
     current.showingBack = !current.showingBack;
     if (current.showingBack) current.hasSeenBack = true;
@@ -639,6 +678,7 @@ document.querySelector("#export-libraries").addEventListener("click", exportLibr
 
 function answerCurrent(known) {
     if (sessionIndex >= sessionCards.length || !sessionCards[sessionIndex].hasSeenBack) return;
+    stopSpeaking();
     const entry = sessionCards[sessionIndex];
     entry.card.date = todayIsRecent();
     entry.card.memorisee = known ? entry.card.memorisee + 1 : 0;

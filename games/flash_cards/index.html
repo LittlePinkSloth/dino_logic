@@ -54,11 +54,19 @@
                 <p id="review-progress" class="subtle"></p>
             </div>
             <h2 id="review-heading" class="visually-hidden">Révision</h2>
-            <button id="flash-card" class="flash-card" type="button" aria-label="Afficher l'autre côté de la carte">
-                <span id="card-side" class="card-side">RECTO</span>
-                <span id="card-text" class="card-text"></span>
-                <span id="flip-hint" class="flip-hint">Touchez la carte pour la retourner</span>
-            </button>
+            <div class="flash-card-container">
+                <button id="flash-card" class="flash-card" type="button" aria-label="Afficher l'autre côté de la carte">
+                    <span id="card-side" class="card-side">RECTO</span>
+                    <span id="card-text" class="card-text"></span>
+                    <span id="flip-hint" class="flip-hint">Touchez la carte pour la retourner</span>
+                </button>
+                <button id="speak-card" class="speak-card" type="button" aria-label="Lire le recto à voix haute" title="Lire à voix haute">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 4V5L7 9H3Zm12.5 3a3.5 3.5 0 0 0-2-3.16v6.31a3.5 3.5 0 0 0 2-3.15Zm-2-8.77v2.06a7 7 0 0 1 0 13.42v2.06a9 9 0 0 0 0-17.54Z"></path>
+                    </svg>
+                </button>
+            </div>
+            <p id="speech-message" class="app-message speech-message" role="status" aria-live="polite"></p>
             <div id="answer-actions" class="answer-actions" hidden>
                 <button id="answer-no" class="answer-button answer-no" type="button">À revoir</button>
                 <button id="answer-yes" class="answer-button answer-yes" type="button">Je savais</button>
